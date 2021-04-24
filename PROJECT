@@ -1,0 +1,32 @@
+domain: agill.apps.db-operator
+layout:
+- go.kubebuilder.io/v3
+projectName: db-operator
+repo: github.com/agill17/db-operator
+resources:
+- api:
+    crdVersion: v1
+    namespaced: true
+  controller: true
+  domain: agill.apps.db-operator
+  group: agill.apps.db-operator
+  kind: DBInstance
+  path: github.com/agill17/db-operator/api/v1alpha1
+  version: v1alpha1
+- api:
+    crdVersion: v1
+    namespaced: true
+  controller: true
+  domain: agill.apps.db-operator
+  group: agill.apps.db-operator
+  kind: DBCluster
+  path: github.com/agill17/db-operator/api/v1alpha1
+  version: v1alpha1
+- api:
+    crdVersion: v1
+  domain: agill.apps.db-operator
+  group: agill.apps.db-operator
+  kind: Provider
+  path: github.com/agill17/db-operator/api/v1alpha1
+  version: v1alpha1
+version: "3"

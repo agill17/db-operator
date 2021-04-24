@@ -1,0 +1,7 @@
+apiVersion: agill.apps.db-operator.agill.apps.db-operator/v1alpha1
+kind: DBInstance
+metadata:
+  name: dbinstance-sample
+spec:
+  # Add fields here
+  foo: bar

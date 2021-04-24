@@ -1,0 +1,24 @@
+# permissions for end users to edit dbinstances.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: dbinstance-editor-role
+rules:
+- apiGroups:
+  - agill.apps.db-operator.agill.apps.db-operator
+  resources:
+  - dbinstances
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - agill.apps.db-operator.agill.apps.db-operator
+  resources:
+  - dbinstances/status
+  verbs:
+  - get

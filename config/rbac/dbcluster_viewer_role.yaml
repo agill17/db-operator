@@ -1,0 +1,20 @@
+# permissions for end users to view dbclusters.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: dbcluster-viewer-role
+rules:
+- apiGroups:
+  - agill.apps.db-operator.agill.apps.db-operator
+  resources:
+  - dbclusters
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - agill.apps.db-operator.agill.apps.db-operator
+  resources:
+  - dbclusters/status
+  verbs:
+  - get
