@@ -18,6 +18,9 @@ package controllers
 
 import (
 	"context"
+	"github.com/agill17/db-operator/factory"
+	"k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/types"
 
 	"github.com/go-logr/logr"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -50,7 +53,56 @@ type DBClusterReconciler struct {
 func (r *DBClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	_ = r.Log.WithValues("dbcluster", req.NamespacedName)
 
-	// your logic here
+	cr := &agillappsdboperatorv1alpha1.DBCluster{}
+	if err := r.Client.Get(context.TODO(), req.NamespacedName, cr); err != nil {
+		if errors.IsNotFound(err) {
+			return ctrl.Result{}, nil
+		}
+		return ctrl.Result{}, err
+	}
+
+	providerCr := &agillappsdboperatorv1alpha1.Provider{}
+	if err := r.Client.Get(context.TODO(), types.NamespacedName{Name: cr.Spec.ProviderRef}, providerCr); err != nil {
+		return ctrl.Result{}, err
+	}
+
+	//TODO: add finalizer here
+
+	cloudDBInterface, err := factory.NewCloudDB(providerCr, cr.Spec.Region)
+	if err != nil {
+		return ctrl.Result{}, err
+	}
+
+	clusterExists, errCheckingExistence := cloudDBInterface.DBClusterExists()
+	if errCheckingExistence != nil {
+		return ctrl.Result{}, errCheckingExistence
+	}
+
+	if cr.GetDeletionTimestamp() != nil {
+		if clusterExists {
+			if errDeleting := cloudDBInterface.DeleteDBCluster(); errDeleting != nil {
+				return ctrl.Result{}, errDeleting
+			}
+			// TODO: remove finalizer here
+			return ctrl.Result{}, nil
+		}
+	}
+
+	if !clusterExists {
+		errCreatingCluster := cloudDBInterface.CreateDBCluster()
+		if errCreatingCluster != nil {
+			return ctrl.Result{}, errCreatingCluster
+		}
+	}
+
+	clusterUpToDate, errChecking := cloudDBInterface.IsDBClusterUpToDate()
+	if errChecking != nil {
+		return ctrl.Result{}, errChecking
+	}
+
+	if !clusterUpToDate {
+		return ctrl.Result{}, cloudDBInterface.ModifyDBCluster()
+	}
 
 	return ctrl.Result{}, nil
 }

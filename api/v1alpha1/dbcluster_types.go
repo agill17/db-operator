@@ -25,11 +25,8 @@ import (
 
 // DBClusterSpec defines the desired state of DBCluster
 type DBClusterSpec struct {
-	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
-
-	// Foo is an example field of DBCluster. Edit dbcluster_types.go to remove/update
-	Foo string `json:"foo,omitempty"`
+	ProviderRef string `json:"providerRef,required"`
+	Region string `json:"region,required"`
 }
 
 // DBClusterStatus defines the observed state of DBCluster

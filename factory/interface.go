@@ -29,10 +29,11 @@ type CloudDB interface {
 }
 
 
-func NewDBClusterInterface(providerType v1alpha1.ProviderType, region string, providerCredentialsMap map[string][]byte) (CloudDB, error){
-	switch providerType {
-	case v1alpha1.AWS:
-		return aws.NewRDSClient(region, providerCredentialsMap)
+func NewCloudDB(provider *v1alpha1.Provider, region string) (CloudDB, error){
+	pType := provider.Spec.Type
+	if pType == v1alpha1.AWS {
+		return aws.NewRDSClient(region, provider.GetName(), provider.Spec.Credentials)
 	}
-	return nil, errors.New(fmt.Sprintf("Provider %v is not yet supported..", providerType))
+
+	return nil, errors.New(fmt.Sprintf("Provider %v is not yet supported..", pType))
 }
