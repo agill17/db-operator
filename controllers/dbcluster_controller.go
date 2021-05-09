@@ -19,8 +19,13 @@ package controllers
 import (
 	"context"
 	"github.com/agill17/db-operator/factory"
+	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/types"
+	"math"
+	"sigs.k8s.io/controller-runtime/pkg/controller"
+	"sigs.k8s.io/controller-runtime/pkg/event"
+	"sigs.k8s.io/controller-runtime/pkg/predicate"
 
 	"github.com/go-logr/logr"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -61,26 +66,29 @@ func (r *DBClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 		return ctrl.Result{}, err
 	}
 
-	providerCr := &agillappsdboperatorv1alpha1.Provider{}
-	if err := r.Client.Get(context.TODO(), types.NamespacedName{Name: cr.Spec.ProviderRef}, providerCr); err != nil {
-		return ctrl.Result{}, err
+	providerSecret := &v1.Secret{}
+	if errGettingSecret := r.Client.Get(context.TODO(), types.NamespacedName{
+		Namespace: cr.Spec.Provider.SecretRef.Namespace,
+		Name:      cr.Spec.Provider.SecretRef.Name,
+	}, providerSecret); errGettingSecret != nil {
+		return ctrl.Result{}, errGettingSecret
 	}
 
 	//TODO: add finalizer here
 
-	cloudDBInterface, err := factory.NewCloudDB(providerCr, cr.Spec.Region)
+	cloudDBInterface, err := factory.NewCloudDB(cr.Spec.Provider.Type, providerSecret, cr.Spec.Region)
 	if err != nil {
 		return ctrl.Result{}, err
 	}
 
-	clusterExists, errCheckingExistence := cloudDBInterface.DBClusterExists()
+	clusterExists, errCheckingExistence := cloudDBInterface.DBClusterExists(cr)
 	if errCheckingExistence != nil {
 		return ctrl.Result{}, errCheckingExistence
 	}
 
 	if cr.GetDeletionTimestamp() != nil {
 		if clusterExists {
-			if errDeleting := cloudDBInterface.DeleteDBCluster(); errDeleting != nil {
+			if errDeleting := cloudDBInterface.DeleteDBCluster(cr); errDeleting != nil {
 				return ctrl.Result{}, errDeleting
 			}
 			// TODO: remove finalizer here
@@ -89,19 +97,19 @@ func (r *DBClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 	}
 
 	if !clusterExists {
-		errCreatingCluster := cloudDBInterface.CreateDBCluster()
+		errCreatingCluster := cloudDBInterface.CreateDBCluster(cr)
 		if errCreatingCluster != nil {
 			return ctrl.Result{}, errCreatingCluster
 		}
 	}
 
-	clusterUpToDate, errChecking := cloudDBInterface.IsDBClusterUpToDate()
+	clusterUpToDate, errChecking := cloudDBInterface.IsDBClusterUpToDate(cr)
 	if errChecking != nil {
 		return ctrl.Result{}, errChecking
 	}
 
 	if !clusterUpToDate {
-		return ctrl.Result{}, cloudDBInterface.ModifyDBCluster()
+		return ctrl.Result{}, cloudDBInterface.ModifyDBCluster(cr)
 	}
 
 	return ctrl.Result{}, nil
@@ -111,5 +119,13 @@ func (r *DBClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 func (r *DBClusterReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&agillappsdboperatorv1alpha1.DBCluster{}).
+		WithOptions(controller.Options{MaxConcurrentReconciles: math.MaxInt32}).
+		WithEventFilter(predicate.Funcs{
+			UpdateFunc: func(event event.UpdateEvent) bool {
+				oldGen := event.ObjectOld.GetGeneration()
+				newGen := event.ObjectNew.GetGeneration()
+				return oldGen == newGen
+			},
+		}).
 		Complete(r)
 }

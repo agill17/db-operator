@@ -44,7 +44,7 @@ var (
 )
 
 const (
-	EnvResyncPeriod = "RESYNC_PERIOD"
+	EnvResyncPeriod           = "RESYNC_PERIOD"
 	DefaultResyncPeriodInSecs = "300"
 )
 
@@ -78,8 +78,8 @@ func main() {
 		os.Exit(1)
 	}
 	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
-		Namespace: "",
-		SyncPeriod: &syncPeriod,
+		Namespace:              "",
+		SyncPeriod:             &syncPeriod,
 		Scheme:                 scheme,
 		MetricsBindAddress:     metricsAddr,
 		Port:                   9443,
@@ -125,7 +125,6 @@ func main() {
 		os.Exit(1)
 	}
 }
-
 
 func getSyncPeriod() (time.Duration, error) {
 	r := DefaultResyncPeriodInSecs

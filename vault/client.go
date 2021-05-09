@@ -14,11 +14,10 @@ const (
 	K8sAuthBackendRole = "VAULT_K8S_AUTH_BACKEND_ROLE"
 )
 
-
 type VClient struct {
-	Client *vaultApi.Client
-	LogicalClient *vaultApi.Logical
-	RoleLeaseDuration int
+	Client                   *vaultApi.Client
+	LogicalClient            *vaultApi.Logical
+	RoleLeaseDuration        int
 	ExpectedLeaseToEndAtTime time.Time
 }
 
@@ -40,7 +39,7 @@ func getVaultAuthInfo(providerCredentials map[string][]byte) (string, string, er
 
 func NewVaultClient(providerCredentials map[string][]byte) (*VClient, error) {
 
-	strAuthBackendPath, strAuthBackendRole, err :=  getVaultAuthInfo(providerCredentials)
+	strAuthBackendPath, strAuthBackendRole, err := getVaultAuthInfo(providerCredentials)
 	if err != nil {
 		return nil, err
 	}
@@ -71,11 +70,10 @@ func NewVaultClient(providerCredentials map[string][]byte) (*VClient, error) {
 	// update non-authenticated vault client with client token so its a authenticated vault client
 	vClient.SetToken(loginSecret.Auth.ClientToken)
 
-
 	c := &VClient{
-		Client: vClient,
-		LogicalClient: vClient.Logical(),
-		RoleLeaseDuration: loginSecret.Auth.LeaseDuration,
+		Client:                   vClient,
+		LogicalClient:            vClient.Logical(),
+		RoleLeaseDuration:        loginSecret.Auth.LeaseDuration,
 		ExpectedLeaseToEndAtTime: time.Now().Add(time.Second * time.Duration(loginSecret.Auth.LeaseDuration)),
 	}
 	return c, nil

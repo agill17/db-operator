@@ -5,11 +5,12 @@ import (
 	"github.com/agill17/db-operator/vault"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
+	"github.com/aws/aws-sdk-go/aws/credentials/stscreds"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/aws/aws-sdk-go/service/rds/rdsiface"
+	"math"
 	"os"
-	"regexp"
 	"strings"
 	"sync"
 )
@@ -19,15 +20,16 @@ const (
 )
 
 type RDSClient struct {
-	rdsClient rdsiface.RDSAPI
+	rdsClient    rdsiface.RDSAPI
 	cacheKeyName string
+	creds        *credentials.Credentials
 }
 
 const (
 	VaultRegexp        = `^vault[a-zA-Z0-9\W].*#[a-zA-Z0-9\W].*$`
 	AccessKeyIdVar     = "AWS_ACCESS_KEY_ID"
 	SecretAccessKeyVar = "AWS_SECRET_ACCESS_KEY"
-
+	RoleArnVar         = "AWS_ROLE_ARN"
 )
 
 var rdsClientCache sync.Map
@@ -46,9 +48,10 @@ func NewRDSClient(region string, pName string, providerCredentials map[string][]
 			return nil, err
 		}
 		rdsClientCfg := &aws.Config{
-			CredentialsChainVerboseErrors:     aws.Bool(true),
-			Region: aws.String(region),
-			Credentials: creds,
+			CredentialsChainVerboseErrors: aws.Bool(true),
+			Region:                        aws.String(region),
+			Credentials:                   creds,
+			MaxRetries:                    aws.Int(math.MaxInt32),
 		}
 
 		if val, ok := os.LookupEnv(EnvMockRDSEndpoint); ok {
@@ -57,63 +60,67 @@ func NewRDSClient(region string, pName string, providerCredentials map[string][]
 		r := &RDSClient{
 			rdsClient:    rds.New(sess, rdsClientCfg),
 			cacheKeyName: cacheKeyName,
+			creds:        creds,
 		}
 		// cache key is deleted when access key id is no longer valid
 		rdsClientCache.Store(cacheKeyName, r)
 		return r, nil
 	}
+	if cachedRDSClient.(*RDSClient).creds.IsExpired() {
+		rdsClientCache.Delete(cacheKeyName)
+		return nil, ErrRequeueNeeded{Message: "AWS Credentials expired, requeue needed."}
+	}
 	return cachedRDSClient.(*RDSClient), nil
 }
 
+/**
+Precedence
+1. AWS_ROLE_ARN -- assuming the underlying pod has permissions to assume another role
+2. Static creds ( AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY )
+*/
 func getAwsCredentials(providerCredentials map[string][]byte) (*credentials.Credentials, error) {
-	accessKey, accessKeyFound := providerCredentials[AccessKeyIdVar]
-	if !accessKeyFound {
-		return nil, ErrorProviderMissingAwsAccessKeyID{Message: fmt.Sprintf("provider.credentials is missing %v key", AccessKeyIdVar)}
+	roleArn, hasRoleArn := providerCredentials[RoleArnVar]
+	if hasRoleArn {
+		sess := session.Must(session.NewSession())
+		return stscreds.NewCredentials(sess, string(roleArn)), nil
 	}
-	strAccessKey := string(accessKey)
-	secretKey, secretKeyFound := providerCredentials[SecretAccessKeyVar]
-	if !secretKeyFound {
-		return nil, ErrorProviderMissingAwsSecretAccessKey{Message: fmt.Sprintf("provider.credentials is missing %v key", SecretAccessKeyVar)}
+	accessKeyId, hasAccessKeyId := providerCredentials[AccessKeyIdVar]
+	if !hasAccessKeyId {
+		return nil, ErrorProviderMissingAwsAccessKeyID{Message: "AWS provider credentials missing access key id"}
 	}
-	strSecretKey := string(secretKey)
-
-	vaultRegexp, err := regexp.Compile(VaultRegexp)
-	if err != nil {
-		return nil, err
+	secretAccessKey, hasSecretKey := providerCredentials[SecretAccessKeyVar]
+	if !hasSecretKey {
+		return nil, ErrorProviderMissingAwsSecretAccessKey{Message: "AWS provider credentials missing seceret access key"}
 	}
-
-	if vaultRegexp.MatchString(strAccessKey) &&
-		vaultRegexp.MatchString(strSecretKey) {
-
-		vClient, err := vault.NewVaultClient(providerCredentials)
-		if err != nil {
-			return nil, err
-		}
-
-		// sample vault path
-		// vault:kv/data/foo#key
-		// remove vault prefix
-		strAccessIdPath := strings.Replace(strAccessKey, "vault:", "", 1)
-		strSecretKeyPath := strings.Replace(strSecretKey, "vault:", "", 1)
-
-		// separate path and key by splitting at #
-		accessIDPathKeySplit := strings.Split(strAccessIdPath, "#")
-		secretKeyPathSplit := strings.Split(strSecretKeyPath, "#")
-
-		accessKeyFromVault, err := vClient.ReadVaultSecretPath(accessIDPathKeySplit[0], accessIDPathKeySplit[1])
-		if err != nil {
-			return nil, err
-		}
-		secretAccessKeyFromVault, err := vClient.ReadVaultSecretPath(secretKeyPathSplit[0], secretKeyPathSplit[1])
-		if err != nil {
-			return nil, err
-		}
-
-		return credentials.NewStaticCredentials(accessKeyFromVault, secretAccessKeyFromVault, ""), nil
-	}
-
-	return credentials.NewStaticCredentials(strAccessKey, strSecretKey, ""), nil
+	return credentials.NewStaticCredentials(string(accessKeyId), string(secretAccessKey), ""), nil
 
 }
 
+// TODO: tabling this for now
+func getCredsFromVault(providerCredentials map[string][]byte, strAccessKey, strSecretKey string) (string, string, error) {
+	vClient, err := vault.NewVaultClient(providerCredentials)
+	if err != nil {
+		return "", "", err
+	}
 
+	// sample vault path
+	// vault:kv/data/foo#key
+	// remove vault prefix
+	strAccessIdPath := strings.Replace(strAccessKey, "vault:", "", 1)
+	strSecretKeyPath := strings.Replace(strSecretKey, "vault:", "", 1)
+
+	// separate path and key by splitting at #
+	accessIDPathKeySplit := strings.Split(strAccessIdPath, "#")
+	secretKeyPathSplit := strings.Split(strSecretKeyPath, "#")
+
+	accessKeyFromVault, err := vClient.ReadVaultSecretPath(accessIDPathKeySplit[0], accessIDPathKeySplit[1])
+	if err != nil {
+		return "", "", err
+	}
+	secretAccessKeyFromVault, err := vClient.ReadVaultSecretPath(secretKeyPathSplit[0], secretKeyPathSplit[1])
+	if err != nil {
+		return "", "", err
+	}
+
+	return accessKeyFromVault, secretAccessKeyFromVault, nil
+}

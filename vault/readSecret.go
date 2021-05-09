@@ -8,7 +8,7 @@ import (
 
 func (v VClient) ReadVaultSecretPath(path string, key string) (string, error) {
 	secret, err := v.LogicalClient.ReadWithData(path, map[string][]string{"version": {"-1"}})
-	if err != nil{
+	if err != nil {
 		return "", err
 	}
 
