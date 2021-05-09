@@ -2,7 +2,7 @@ package aws
 
 import (
 	"fmt"
-	"github.com/agill17/db-operator/vault"
+	vault2 "github.com/agill17/db-operator/controllers/vault"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/credentials/stscreds"
@@ -98,7 +98,7 @@ func getAwsCredentials(providerCredentials map[string][]byte) (*credentials.Cred
 
 // TODO: tabling this for now
 func getCredsFromVault(providerCredentials map[string][]byte, strAccessKey, strSecretKey string) (string, string, error) {
-	vClient, err := vault.NewVaultClient(providerCredentials)
+	vClient, err := vault2.NewVaultClient(providerCredentials)
 	if err != nil {
 		return "", "", err
 	}
