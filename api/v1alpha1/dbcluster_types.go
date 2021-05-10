@@ -290,9 +290,16 @@ type DBClusterSpec struct {
 }
 
 // DBClusterStatus defines the observed state of DBCluster
+type DBClusterState string
+const (
+	ClusterPending = "pending"
+	ClusterAvailable = "available"
+	ClusterCreating = "creating"
+	ClusterDeleting = "deleting"
+)
 type DBClusterStatus struct {
-	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
+	Phase DBClusterState `json:"phase"`
+	SecretsManagerVersionID string `json:"secretsManagerVersionID"`
 }
 
 //+kubebuilder:object:root=true
