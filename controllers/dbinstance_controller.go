@@ -34,9 +34,9 @@ type DBInstanceReconciler struct {
 	Scheme *runtime.Scheme
 }
 
-//+kubebuilder:rbac:groups=agill.apps.db-operator.agill.apps.db-operator,resources=dbinstances,verbs=get;list;watch;create;update;patch;delete
-//+kubebuilder:rbac:groups=agill.apps.db-operator.agill.apps.db-operator,resources=dbinstances/status,verbs=get;update;patch
-//+kubebuilder:rbac:groups=agill.apps.db-operator.agill.apps.db-operator,resources=dbinstances/finalizers,verbs=update
+//+kubebuilder:rbac:groups=agill.apps.db-operator,resources=dbinstances,verbs=get;list;watch;create;update;patch;delete
+//+kubebuilder:rbac:groups=agill.apps.db-operator,resources=dbinstances/status,verbs=get;update;patch
+//+kubebuilder:rbac:groups=agill.apps.db-operator,resources=dbinstances/finalizers,verbs=update
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
 // move the current state of the cluster closer to the desired state.

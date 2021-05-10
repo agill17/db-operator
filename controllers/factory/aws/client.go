@@ -96,7 +96,11 @@ func getAwsCredentials(providerCredentials map[string][]byte) (*credentials.Cred
 
 }
 
-// TODO: tabling this for now
+/*
+	TODO: revisit,redesign : tabling this for now because
+	vault api does not provide a simple way
+	to find if a path is kv engine or aws secrets engine
+*/
 func getCredsFromVault(providerCredentials map[string][]byte, strAccessKey, strSecretKey string) (string, string, error) {
 	vClient, err := vault2.NewVaultClient(providerCredentials)
 	if err != nil {

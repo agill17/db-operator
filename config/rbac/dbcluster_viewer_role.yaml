@@ -5,7 +5,7 @@ metadata:
   name: dbcluster-viewer-role
 rules:
 - apiGroups:
-  - agill.apps.db-operator.agill.apps.db-operator
+  - agill.apps.db-operator
   resources:
   - dbclusters
   verbs:
@@ -13,7 +13,7 @@ rules:
   - list
   - watch
 - apiGroups:
-  - agill.apps.db-operator.agill.apps.db-operator
+  - agill.apps.db-operator
   resources:
   - dbclusters/status
   verbs:

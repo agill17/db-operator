@@ -6,9 +6,9 @@ metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.4.1
   creationTimestamp: null
-  name: dbclusters.agill.apps.db-operator.agill.apps.db-operator
+  name: dbclusters.agill.apps.db-operator
 spec:
-  group: agill.apps.db-operator.agill.apps.db-operator
+  group: agill.apps.db-operator
   names:
     kind: DBCluster
     listKind: DBClusterList

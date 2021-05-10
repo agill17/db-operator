@@ -1,4 +1,4 @@
-apiVersion: agill.apps.db-operator.agill.apps.db-operator/v1alpha1
+apiVersion: agill.apps.db-operator/v1alpha1
 kind: Provider
 metadata:
   name: provider-sample

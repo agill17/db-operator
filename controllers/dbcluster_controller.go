@@ -18,6 +18,7 @@ package controllers
 
 import (
 	"context"
+	"fmt"
 	"github.com/agill17/db-operator/controllers/factory"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -42,17 +43,18 @@ type DBClusterReconciler struct {
 	Scheme *runtime.Scheme
 }
 
-//+kubebuilder:rbac:groups=agill.apps.db-operator.agill.apps.db-operator,resources=dbclusters,verbs=get;list;watch;create;update;patch;delete
-//+kubebuilder:rbac:groups=agill.apps.db-operator.agill.apps.db-operator,resources=dbclusters/status,verbs=get;update;patch
-//+kubebuilder:rbac:groups=agill.apps.db-operator.agill.apps.db-operator,resources=dbclusters/finalizers,verbs=update
+var (
+	groupName          = agillappsdboperatorv1alpha1.GroupVersion.Group
+	groupVersion       = agillappsdboperatorv1alpha1.GroupVersion.Version
+	dbClusterFinalizer = fmt.Sprintf("%s/%s-finalizer", groupName, groupVersion)
+)
+
+//+kubebuilder:rbac:groups=agill.apps.db-operator,resources=dbclusters,verbs=get;list;watch;create;update;patch;delete
+//+kubebuilder:rbac:groups=agill.apps.db-operator,resources=dbclusters/status,verbs=get;update;patch
+//+kubebuilder:rbac:groups=agill.apps.db-operator,resources=dbclusters/finalizers,verbs=update
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
 // move the current state of the cluster closer to the desired state.
-// TODO(user): Modify the Reconcile function to compare the state specified by
-// the DBCluster object against the actual cluster state, and then
-// perform operations to make the cluster state reflect the state specified by
-// the user.
-//
 // For more details, check Reconcile and its Result here:
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.7.2/pkg/reconcile
 func (r *DBClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
@@ -74,26 +76,30 @@ func (r *DBClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 		return ctrl.Result{}, errGettingSecret
 	}
 
-	//TODO: add finalizer here
+	if errAddingFinalizer := AddFinalizer(dbClusterFinalizer, r.Client, cr); errAddingFinalizer != nil {
+		r.Log.Error(errAddingFinalizer, "Failed to add finalizer")
+		return ctrl.Result{}, errAddingFinalizer
+	}
 
 	cloudDBInterface, err := factory.NewCloudDB(cr.Spec.Provider.Type, providerSecret, cr.Spec.Region)
 	if err != nil {
 		return ctrl.Result{}, err
 	}
 
+	if cr.GetDeletionTimestamp() != nil {
+		if errDeleting := cloudDBInterface.DeleteDBCluster(cr); errDeleting != nil {
+			return ctrl.Result{}, errDeleting
+		}
+		if errDeletingFinalizer := RemoveFinalizer(dbClusterFinalizer, r.Client, cr); errDeletingFinalizer != nil {
+			r.Log.Error(errDeletingFinalizer, "Failed to remove finalizer")
+			return ctrl.Result{}, errDeletingFinalizer
+		}
+		return ctrl.Result{}, nil
+	}
+
 	clusterExists, errCheckingExistence := cloudDBInterface.DBClusterExists(cr)
 	if errCheckingExistence != nil {
 		return ctrl.Result{}, errCheckingExistence
-	}
-
-	if cr.GetDeletionTimestamp() != nil {
-		if clusterExists {
-			if errDeleting := cloudDBInterface.DeleteDBCluster(cr); errDeleting != nil {
-				return ctrl.Result{}, errDeleting
-			}
-			// TODO: remove finalizer here
-			return ctrl.Result{}, nil
-		}
 	}
 
 	if !clusterExists {

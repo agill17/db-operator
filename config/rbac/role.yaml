@@ -7,7 +7,7 @@ metadata:
   name: manager-role
 rules:
 - apiGroups:
-  - agill.apps.db-operator.agill.apps.db-operator
+  - agill.apps.db-operator
   resources:
   - dbclusters
   verbs:
@@ -19,13 +19,13 @@ rules:
   - update
   - watch
 - apiGroups:
-  - agill.apps.db-operator.agill.apps.db-operator
+  - agill.apps.db-operator
   resources:
   - dbclusters/finalizers
   verbs:
   - update
 - apiGroups:
-  - agill.apps.db-operator.agill.apps.db-operator
+  - agill.apps.db-operator
   resources:
   - dbclusters/status
   verbs:
@@ -33,7 +33,7 @@ rules:
   - patch
   - update
 - apiGroups:
-  - agill.apps.db-operator.agill.apps.db-operator
+  - agill.apps.db-operator
   resources:
   - dbinstances
   verbs:
@@ -45,13 +45,13 @@ rules:
   - update
   - watch
 - apiGroups:
-  - agill.apps.db-operator.agill.apps.db-operator
+  - agill.apps.db-operator
   resources:
   - dbinstances/finalizers
   verbs:
   - update
 - apiGroups:
-  - agill.apps.db-operator.agill.apps.db-operator
+  - agill.apps.db-operator
   resources:
   - dbinstances/status
   verbs:

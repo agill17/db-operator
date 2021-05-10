@@ -4,4 +4,4 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     cert-manager.io/inject-ca-from: $(CERTIFICATE_NAMESPACE)/$(CERTIFICATE_NAME)
-  name: dbinstances.agill.apps.db-operator.agill.apps.db-operator
+  name: dbinstances.agill.apps.db-operator

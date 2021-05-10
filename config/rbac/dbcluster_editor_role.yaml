@@ -5,7 +5,7 @@ metadata:
   name: dbcluster-editor-role
 rules:
 - apiGroups:
-  - agill.apps.db-operator.agill.apps.db-operator
+  - agill.apps.db-operator
   resources:
   - dbclusters
   verbs:
@@ -17,7 +17,7 @@ rules:
   - update
   - watch
 - apiGroups:
-  - agill.apps.db-operator.agill.apps.db-operator
+  - agill.apps.db-operator
   resources:
   - dbclusters/status
   verbs:

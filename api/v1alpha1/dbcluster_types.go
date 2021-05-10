@@ -23,7 +23,7 @@ import (
 
 type MasterUserPasswordSecretRef struct {
 	// The key in secret.data that contains the master password
-	Key string `json:"key,required"`
+	Key       string             `json:"key,required"`
 	SecretRef v1.SecretReference `json:"secretRef"`
 }
 
@@ -48,8 +48,6 @@ type DBClusterSpec struct {
 	// +kubebuilder:default:=1
 	BackupRetentionPeriod int `json:"backupRetentionPeriod,optional"`
 
-
-
 	// A value that indicates whether to copy all tags from the DB cluster to snapshots
 	// of the DB cluster. The default is not to copy them.
 	CopyTagsToSnapshot bool `json:"copyTagsToSnapshot,optional"`
@@ -61,7 +59,7 @@ type DBClusterSpec struct {
 	//    * Can't end with a hyphen or contain two consecutive hyphens.
 	// Example: my-cluster1
 	// DBClusterIdentifierOverride is a optional field, defaults to .metadata.name
-	DBClusterIdentifierOverride string  `json:"dbClusterIdentifierOverride,optional"`
+	DBClusterIdentifierOverride string `json:"dbClusterIdentifierOverride,optional"`
 
 	// The name of the DB cluster parameter group to associate with this DB cluster.
 	// If you do not specify a value, then the default DB cluster parameter group
@@ -82,8 +80,8 @@ type DBClusterSpec struct {
 	// The name for your database of up to 64 alphanumeric characters. If you do
 	// not provide a name, Amazon RDS doesn't create a database in the DB cluster
 	// you are creating.
-	// +kubebuilder:validation:Minimum:=1
-	// +kubebuilder:validation:Maximum:=63
+	// +kubebuilder:validation:MinLength=1
+	// +kubebuilder:validation:MaxLength=63
 	DatabaseName string `json:"databaseName,required"`
 
 	// A value that indicates whether the DB cluster has deletion protection enabled.
@@ -139,7 +137,7 @@ type DBClusterSpec struct {
 	// MySQL 5.7-compatible Aurora), and aurora-postgresql
 	//
 	// Engine is a required field
-	// +kubebuilder:validation:Enum:=["aurora","aurora-mysql","aurora-postgresql"]
+	// +kubebuilder:validation:Enum:="aurora";"aurora-mysql";"aurora-postgresql"
 	Engine string `json:"engine,required"`
 
 	// The DB engine mode of the DB cluster, either provisioned, serverless, parallelquery,
@@ -167,7 +165,7 @@ type DBClusterSpec struct {
 	//    * Limitations of Aurora Global Databases (https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/aurora-global-database.html#aurora-global-database.limitations)
 	//
 	//    * Limitations of Multi-Master Clusters (https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/aurora-multi-master.html#aurora-multi-master-limitations)
-	// +kubebuilder:validation:Enum:=["provisioned","serverless","parallelquery","global","multimaster"]
+	// +kubebuilder:validation:Enum:="provisioned";"serverless";"parallelquery";"global";"multimaster"
 	EngineMode string `json:"engineMode,required"`
 
 	// The version number of the database engine to use.
@@ -218,7 +216,7 @@ type DBClusterSpec struct {
 	// you must set KmsKeyId to a AWS KMS key identifier that is valid in the destination
 	// AWS Region. This CMK is used to encrypt the read replica in that AWS Region.
 	KmsKeyId string `json:"kmsKeyID,optional"`
-	
+
 	// The password for the master database user. This password can contain any
 	// printable ASCII character except "/", """, or "@".
 	//
@@ -231,7 +229,7 @@ type DBClusterSpec struct {
 	//    * First character must be a letter.
 	//    * Can't be a reserved word for the chosen database engine.
 	MasterUsername string `json:"masterUsername,required"`
-	
+
 	// A value that indicates that the DB cluster should be associated with the
 	// specified option group.
 	// Permanent options can't be removed from an option group. The option group
@@ -241,7 +239,6 @@ type DBClusterSpec struct {
 	// The port number on which the instances in the DB cluster accept connections.
 	// Default: 3306 if engine is set as aurora or 5432 if set to aurora-postgresql.
 	Port int `json:"port,optional"`
-
 
 	// The daily time range during which automated backups are created if automated
 	// backups are enabled using the BackupRetentionPeriod parameter.
@@ -281,7 +278,6 @@ type DBClusterSpec struct {
 	// The Amazon Resource Name (ARN) of the source DB instance or DB cluster if
 	// this DB cluster is created as a read replica.
 	ReplicationSourceIdentifier string `json:"replicationSourceIdentifier,optional"`
-
 
 	// A value that indicates whether the DB cluster is encrypted.
 	StorageEncrypted bool `json:"storageEncrypted,optional"`
@@ -324,13 +320,11 @@ func init() {
 	SchemeBuilder.Register(&DBCluster{}, &DBClusterList{})
 }
 
-
 func (db DBCluster) GetDBClusterPort() int {
 	switch db.Spec.Engine {
-	case "aurora","aurora-mysql":
+	case "aurora", "aurora-mysql":
 		return 3306
 	default:
 		return 5432
 	}
 }
-

@@ -2,9 +2,9 @@
 # since it depends on service name and namespace that are out of this kustomize package.
 # It should be run by config/default
 resources:
-- bases/agill.apps.db-operator.agill.apps.db-operator_dbinstances.yaml
-- bases/agill.apps.db-operator.agill.apps.db-operator_dbclusters.yaml
-- bases/agill.apps.db-operator.agill.apps.db-operator_providers.yaml
+- bases/agill.apps.db-operator_dbinstances.yaml
+- bases/agill.apps.db-operator_dbclusters.yaml
+- bases/agill.apps.db-operator_providers.yaml
 #+kubebuilder:scaffold:crdkustomizeresource
 
 patchesStrategicMerge:

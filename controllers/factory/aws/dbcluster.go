@@ -9,7 +9,7 @@ import (
 )
 
 func (R RDSClient) CreateDBCluster(in *v1alpha1.DBCluster) error {
-	if _,errCreating := R.rdsClient.CreateDBCluster(inputToCreateDBClusterInput(in)); errCreating != nil {
+	if _, errCreating := R.rdsClient.CreateDBCluster(inputToCreateDBClusterInput(in)); errCreating != nil {
 		return errCreating
 	}
 	return nil
@@ -18,10 +18,11 @@ func (R RDSClient) CreateDBCluster(in *v1alpha1.DBCluster) error {
 func (R RDSClient) DeleteDBCluster(in *v1alpha1.DBCluster) error {
 	if _, errDeleting := R.rdsClient.DeleteDBCluster(inputToDeleteDBClusterInput(in)); errDeleting != nil {
 		if awsErr, isAwsErr := errDeleting.(awserr.Error); isAwsErr {
-			if awsErr.Error() != rds.ErrCodeDBClusterNotFoundFault { // if for some reason the dbCluster is not found, ignore and move on
-				return awsErr
+			if awsErr.Error() == rds.ErrCodeDBClusterNotFoundFault { // if for some reason the dbCluster is not found, ignore and move on
+				return nil
 			}
 		}
+		return errDeleting
 	}
 	return nil
 }
@@ -52,7 +53,6 @@ func (R RDSClient) IsDBClusterUpToDate(in *v1alpha1.DBCluster) (bool, error) {
 	panic("implement me")
 }
 
-
 func inputToCreateDBClusterInput(in *v1alpha1.DBCluster) *rds.CreateDBClusterInput {
 	return nil
 }
@@ -63,7 +63,7 @@ func inputToModifyDBClusterInput(in *v1alpha1.DBCluster) *rds.ModifyDBClusterInp
 	return nil
 }
 
-func inputToDBClusterID(in *v1alpha1.DBCluster) string  {
+func inputToDBClusterID(in *v1alpha1.DBCluster) string {
 	clusterID := fmt.Sprintf("%s-%s", in.GetNamespace(), in.GetName())
 	if in.Spec.DBClusterIdentifierOverride != "" {
 		clusterID = in.Spec.DBClusterIdentifierOverride
