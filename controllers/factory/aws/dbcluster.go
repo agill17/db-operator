@@ -28,7 +28,7 @@ func (i InternalAwsClients) CreateDBCluster(Obj client.Object, client client.Cli
 	if err != nil {
 		return err
 	}
-	_, errCreating := i.rdsClient.CreateDBCluster(dbCluster.CreateDBClusterInput(pass))
+	_, errCreating := i.rdsClient.CreateDBCluster(createDBClusterInput(dbCluster, pass))
 	return errCreating
 }
 
@@ -37,7 +37,7 @@ func (i InternalAwsClients) DeleteDBCluster(Obj client.Object) error {
 	if errCasting != nil {
 		return errCasting
 	}
-	if _, errDeleting := i.rdsClient.DeleteDBCluster(dbCluster.DeleteDBClusterInput()); errDeleting != nil {
+	if _, errDeleting := i.rdsClient.DeleteDBCluster(deleteDBClusterInput(dbCluster)); errDeleting != nil {
 		if awsErr, isAwsErr := errDeleting.(awserr.Error); isAwsErr {
 			if awsErr.Error() == rds.ErrCodeDBClusterNotFoundFault { // if for some reason the dbCluster is not found, ignore and move on
 				return nil
@@ -57,7 +57,7 @@ func (i InternalAwsClients) ModifyDBCluster(Obj client.Object, client client.Cli
 	if err != nil {
 		return err
 	}
-	if _, errUpdating := i.rdsClient.ModifyDBCluster(dbCluster.ModifyDBClusterInput(pass)); errUpdating != nil {
+	if _, errUpdating := i.rdsClient.ModifyDBCluster(modifyDBClusterInput(dbCluster, pass)); errUpdating != nil {
 		return errUpdating
 	}
 	return nil
