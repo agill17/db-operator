@@ -103,19 +103,19 @@ func (r *DBClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 	}
 
 	if !clusterExists {
-		errCreatingCluster := cloudDBInterface.CreateDBCluster(cr)
+		errCreatingCluster := cloudDBInterface.CreateDBCluster(cr, r.Client, r.Scheme)
 		if errCreatingCluster != nil {
 			return ctrl.Result{}, errCreatingCluster
 		}
 	}
 
-	clusterUpToDate, errChecking := cloudDBInterface.IsDBClusterUpToDate(cr)
+	clusterUpToDate, errChecking := cloudDBInterface.IsDBClusterUpToDate(cr, r.Client, r.Scheme)
 	if errChecking != nil {
 		return ctrl.Result{}, errChecking
 	}
 
 	if !clusterUpToDate {
-		return ctrl.Result{}, cloudDBInterface.ModifyDBCluster(cr)
+		return ctrl.Result{}, cloudDBInterface.ModifyDBCluster(cr, r.Client, r.Scheme)
 	}
 
 	return ctrl.Result{}, nil

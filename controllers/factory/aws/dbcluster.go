@@ -1,22 +1,43 @@
 package aws
 
 import (
+	"errors"
 	"fmt"
 	"github.com/agill17/db-operator/api/v1alpha1"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/rds"
+	"k8s.io/apimachinery/pkg/runtime"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func (R RDSClient) CreateDBCluster(in *v1alpha1.DBCluster) error {
-	if _, errCreating := R.rdsClient.CreateDBCluster(inputToCreateDBClusterInput(in)); errCreating != nil {
-		return errCreating
+func clientObjToDBCluster(obj client.Object) (*v1alpha1.DBCluster, error) {
+	dbCluster, ok := obj.(*v1alpha1.DBCluster)
+	if !ok {
+		return nil, errors.New(fmt.Sprintf("ErrCasting%TtoDBCluster", obj))
 	}
-	return nil
+	return dbCluster, nil
 }
 
-func (R RDSClient) DeleteDBCluster(in *v1alpha1.DBCluster) error {
-	if _, errDeleting := R.rdsClient.DeleteDBCluster(inputToDeleteDBClusterInput(in)); errDeleting != nil {
+func (i InternalAwsClients) CreateDBCluster(Obj client.Object, client client.Client, scheme *runtime.Scheme) error {
+	dbCluster, errCasting := clientObjToDBCluster(Obj)
+	if errCasting != nil {
+		return errCasting
+	}
+	pass, err := i.GetOrSetMasterPassword(Obj, client, scheme)
+	if err != nil {
+		return err
+	}
+	_, errCreating := i.rdsClient.CreateDBCluster(dbCluster.CreateDBClusterInput(pass))
+	return errCreating
+}
+
+func (i InternalAwsClients) DeleteDBCluster(Obj client.Object) error {
+	dbCluster, errCasting := clientObjToDBCluster(Obj)
+	if errCasting != nil {
+		return errCasting
+	}
+	if _, errDeleting := i.rdsClient.DeleteDBCluster(dbCluster.DeleteDBClusterInput()); errDeleting != nil {
 		if awsErr, isAwsErr := errDeleting.(awserr.Error); isAwsErr {
 			if awsErr.Error() == rds.ErrCodeDBClusterNotFoundFault { // if for some reason the dbCluster is not found, ignore and move on
 				return nil
@@ -27,16 +48,28 @@ func (R RDSClient) DeleteDBCluster(in *v1alpha1.DBCluster) error {
 	return nil
 }
 
-func (R RDSClient) ModifyDBCluster(in *v1alpha1.DBCluster) error {
-	if _, errUpdating := R.rdsClient.ModifyDBCluster(inputToModifyDBClusterInput(in)); errUpdating != nil {
+func (i InternalAwsClients) ModifyDBCluster(Obj client.Object, client client.Client, scheme *runtime.Scheme) error {
+	dbCluster, errCasting := clientObjToDBCluster(Obj)
+	if errCasting != nil {
+		return errCasting
+	}
+	pass, err := i.GetOrSetMasterPassword(Obj, client, scheme)
+	if err != nil {
+		return err
+	}
+	if _, errUpdating := i.rdsClient.ModifyDBCluster(dbCluster.ModifyDBClusterInput(pass)); errUpdating != nil {
 		return errUpdating
 	}
 	return nil
 }
 
-func (R RDSClient) DBClusterExists(in *v1alpha1.DBCluster) (bool, error) {
-	_, err := R.rdsClient.DescribeDBClusters(&rds.DescribeDBClustersInput{
-		DBClusterIdentifier: aws.String(inputToDBClusterID(in)),
+func (i InternalAwsClients) DBClusterExists(Obj client.Object) (bool, error) {
+	dbCluster, errCasting := clientObjToDBCluster(Obj)
+	if errCasting != nil {
+		return false, errCasting
+	}
+	_, err := i.rdsClient.DescribeDBClusters(&rds.DescribeDBClustersInput{
+		DBClusterIdentifier: aws.String(dbCluster.GetDBClusterID()),
 	})
 	if err != nil {
 		if awsErr, isAwsErr := err.(awserr.Error); isAwsErr {
@@ -49,24 +82,6 @@ func (R RDSClient) DBClusterExists(in *v1alpha1.DBCluster) (bool, error) {
 	return true, nil
 }
 
-func (R RDSClient) IsDBClusterUpToDate(in *v1alpha1.DBCluster) (bool, error) {
+func (i InternalAwsClients) IsDBClusterUpToDate(Obj client.Object, client client.Client, scheme *runtime.Scheme) (bool, error) {
 	panic("implement me")
-}
-
-func inputToCreateDBClusterInput(in *v1alpha1.DBCluster) *rds.CreateDBClusterInput {
-	return nil
-}
-func inputToDeleteDBClusterInput(in *v1alpha1.DBCluster) *rds.DeleteDBClusterInput {
-	return nil
-}
-func inputToModifyDBClusterInput(in *v1alpha1.DBCluster) *rds.ModifyDBClusterInput {
-	return nil
-}
-
-func inputToDBClusterID(in *v1alpha1.DBCluster) string {
-	clusterID := fmt.Sprintf("%s-%s", in.GetNamespace(), in.GetName())
-	if in.Spec.DBClusterIdentifierOverride != "" {
-		clusterID = in.Spec.DBClusterIdentifierOverride
-	}
-	return clusterID
 }

@@ -9,6 +9,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/aws/aws-sdk-go/service/rds/rdsiface"
+	"github.com/aws/aws-sdk-go/service/secretsmanager"
+	"github.com/aws/aws-sdk-go/service/secretsmanager/secretsmanageriface"
 	"math"
 	"os"
 	"strings"
@@ -16,11 +18,12 @@ import (
 )
 
 const (
-	EnvMockRDSEndpoint = "MOCK_RDS_ENDPOINT"
+	MockAwsEndpoint = "MOCK_AWS_ENDPOINT"
 )
 
-type RDSClient struct {
+type InternalAwsClients struct {
 	rdsClient    rdsiface.RDSAPI
+	smClient     secretsmanageriface.SecretsManagerAPI
 	cacheKeyName string
 	creds        *credentials.Credentials
 }
@@ -32,45 +35,47 @@ const (
 	RoleArnVar         = "AWS_ROLE_ARN"
 )
 
-var rdsClientCache sync.Map
+var awsClientCache sync.Map
 
-func getRDSClientCacheKey(pName, region string) string {
+func getAwsClientCacheKey(pName, region string) string {
 	return fmt.Sprintf("aws-%v-%v", pName, region)
 }
 
-func NewRDSClient(region string, pName string, providerCredentials map[string][]byte) (*RDSClient, error) {
-	cacheKeyName := getRDSClientCacheKey(pName, region)
-	cachedRDSClient, ok := rdsClientCache.Load(cacheKeyName)
+func NewInternalAwsClient(region string, pName string, providerCredentials map[string][]byte) (*InternalAwsClients, error) {
+	cacheKeyName := getAwsClientCacheKey(pName, region)
+	cachedInternalAwsClient, ok := awsClientCache.Load(cacheKeyName)
 	if !ok {
 		sess := session.Must(session.NewSession())
 		creds, err := getAwsCredentials(providerCredentials)
 		if err != nil {
 			return nil, err
 		}
-		rdsClientCfg := &aws.Config{
+		awsClientCfg := &aws.Config{
 			CredentialsChainVerboseErrors: aws.Bool(true),
 			Region:                        aws.String(region),
 			Credentials:                   creds,
 			MaxRetries:                    aws.Int(math.MaxInt32),
 		}
 
-		if val, ok := os.LookupEnv(EnvMockRDSEndpoint); ok {
-			rdsClientCfg.Endpoint = aws.String(val)
+		if val, ok := os.LookupEnv(MockAwsEndpoint); ok {
+			awsClientCfg.Endpoint = aws.String(val)
 		}
-		r := &RDSClient{
-			rdsClient:    rds.New(sess, rdsClientCfg),
+
+		r := &InternalAwsClients{
+			rdsClient:    rds.New(sess, awsClientCfg),
+			smClient:     secretsmanager.New(sess, awsClientCfg),
 			cacheKeyName: cacheKeyName,
 			creds:        creds,
 		}
 		// cache key is deleted when access key id is no longer valid
-		rdsClientCache.Store(cacheKeyName, r)
+		awsClientCache.Store(cacheKeyName, r)
 		return r, nil
 	}
-	if cachedRDSClient.(*RDSClient).creds.IsExpired() {
-		rdsClientCache.Delete(cacheKeyName)
+	if cachedInternalAwsClient.(*InternalAwsClients).creds.IsExpired() {
+		awsClientCache.Delete(cacheKeyName)
 		return nil, ErrRequeueNeeded{Message: "AWS Credentials expired, requeue needed."}
 	}
-	return cachedRDSClient.(*RDSClient), nil
+	return cachedInternalAwsClient.(*InternalAwsClients), nil
 }
 
 /**

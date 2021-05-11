@@ -197,11 +197,9 @@ spec:
                   encrypt the read replica in that AWS Region."
                 type: string
               masterUserPasswordSecretRef:
-                description: "The password for the master database user. This password
-                  can contain any printable ASCII character except \"/\", \"\"\",
-                  or \"@\". \n Constraints: Must contain from 8 to 41 characters."
+                description: Specifies the secret to use
                 properties:
-                  key:
+                  passwordKey:
                     description: The key in secret.data that contains the master password
                     type: string
                   secretRef:
@@ -218,7 +216,7 @@ spec:
                         type: string
                     type: object
                 required:
-                - key
+                - passwordKey
                 - secretRef
                 type: object
               masterUsername:
@@ -237,6 +235,7 @@ spec:
                 description: 'The port number on which the instances in the DB cluster
                   accept connections. Default: 3306 if engine is set as aurora or
                   5432 if set to aurora-postgresql.'
+                format: int64
                 type: integer
               preferredBackupWindow:
                 description: "The daily time range during which automated backups
@@ -335,7 +334,15 @@ spec:
             - vpcSecurityGroupIds
             type: object
           status:
-            description: DBClusterStatus defines the observed state of DBCluster
+            properties:
+              phase:
+                description: DBClusterStatus defines the observed state of DBCluster
+                type: string
+              secretsManagerVersionID:
+                type: string
+            required:
+            - phase
+            - secretsManagerVersionID
             type: object
         type: object
     served: true

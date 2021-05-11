@@ -23,3 +23,11 @@ type ErrRequeueNeeded struct {
 func (e ErrRequeueNeeded) Error() string {
 	return e.Message
 }
+
+type ErrDBClusterPasswordKeyInSecretNotFound struct {
+	Message string
+}
+
+func (e ErrDBClusterPasswordKeyInSecretNotFound) Error() string {
+	return e.Message
+}

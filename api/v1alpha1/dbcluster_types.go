@@ -23,8 +23,8 @@ import (
 
 type MasterUserPasswordSecretRef struct {
 	// The key in secret.data that contains the master password
-	Key       string             `json:"key,required"`
-	SecretRef v1.SecretReference `json:"secretRef"`
+	PasswordKey string             `json:"passwordKey"`
+	SecretRef   v1.SecretReference `json:"secretRef"`
 }
 
 // DBClusterSpec defines the desired state of DBCluster
@@ -217,11 +217,8 @@ type DBClusterSpec struct {
 	// AWS Region. This CMK is used to encrypt the read replica in that AWS Region.
 	KmsKeyId string `json:"kmsKeyID,optional"`
 
-	// The password for the master database user. This password can contain any
-	// printable ASCII character except "/", """, or "@".
-	//
-	// Constraints: Must contain from 8 to 41 characters.
-	MasterUserPasswordSecretRef MasterUserPasswordSecretRef `json:"masterUserPasswordSecretRef,required"`
+	// Specifies the secret to use
+	MasterUserPasswordSecretRef MasterUserPasswordSecretRef `json:"masterUserPasswordSecretRef,optional"`
 
 	// The name of the master user for the DB cluster.
 	// Constraints:
@@ -238,7 +235,7 @@ type DBClusterSpec struct {
 
 	// The port number on which the instances in the DB cluster accept connections.
 	// Default: 3306 if engine is set as aurora or 5432 if set to aurora-postgresql.
-	Port int `json:"port,optional"`
+	Port int64 `json:"port,optional"`
 
 	// The daily time range during which automated backups are created if automated
 	// backups are enabled using the BackupRetentionPeriod parameter.
@@ -291,15 +288,17 @@ type DBClusterSpec struct {
 
 // DBClusterStatus defines the observed state of DBCluster
 type DBClusterState string
+
 const (
-	ClusterPending = "pending"
+	ClusterPending   = "pending"
 	ClusterAvailable = "available"
-	ClusterCreating = "creating"
-	ClusterDeleting = "deleting"
+	ClusterCreating  = "creating"
+	ClusterDeleting  = "deleting"
 )
+
 type DBClusterStatus struct {
-	Phase DBClusterState `json:"phase"`
-	SecretsManagerVersionID string `json:"secretsManagerVersionID"`
+	Phase                   DBClusterState `json:"phase"`
+	SecretsManagerVersionID string         `json:"secretsManagerVersionID"`
 }
 
 //+kubebuilder:object:root=true
