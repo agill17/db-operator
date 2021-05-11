@@ -1,9 +1,11 @@
 package aws
 
 import (
+	"fmt"
 	"github.com/agill17/db-operator/api/v1alpha1"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/rds"
+	"time"
 )
 
 func createDBClusterInput(in *v1alpha1.DBCluster, password string) *rds.CreateDBClusterInput {
@@ -36,7 +38,11 @@ func createDBClusterInput(in *v1alpha1.DBCluster, password string) *rds.CreateDB
 }
 
 func deleteDBClusterInput(in *v1alpha1.DBCluster) *rds.DeleteDBClusterInput {
-	return nil
+	return &rds.DeleteDBClusterInput{
+		DBClusterIdentifier: aws.String(in.GetDBClusterID()),
+		FinalDBSnapshotIdentifier: aws.String(fmt.Sprintf("%s-%s", in.GetDBClusterID(), string(time.Now().Unix()))),
+		SkipFinalSnapshot: aws.Bool(!in.Spec.SkipFinalSnapshot),
+	}
 }
 func modifyDBClusterInput(in *v1alpha1.DBCluster, password string) *rds.ModifyDBClusterInput {
 	return nil

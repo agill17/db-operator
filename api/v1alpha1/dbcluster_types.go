@@ -46,10 +46,12 @@ type DBClusterSpec struct {
 	// +kubebuilder:validation:Minimum:=1
 	// +kubebuilder:validation:Maximum:=35
 	// +kubebuilder:default:=1
+	// +optional
 	BackupRetentionPeriod int `json:"backupRetentionPeriod,optional"`
 
 	// A value that indicates whether to copy all tags from the DB cluster to snapshots
 	// of the DB cluster. The default is not to copy them.
+	// +optional
 	CopyTagsToSnapshot bool `json:"copyTagsToSnapshot,optional"`
 
 	// The DB cluster identifier. This parameter is stored as a lowercase string.
@@ -59,6 +61,7 @@ type DBClusterSpec struct {
 	//    * Can't end with a hyphen or contain two consecutive hyphens.
 	// Example: my-cluster1
 	// DBClusterIdentifierOverride is a optional field, defaults to .metadata.name
+	// +optional
 	DBClusterIdentifierOverride string `json:"dbClusterIdentifierOverride,optional"`
 
 	// The name of the DB cluster parameter group to associate with this DB cluster.
@@ -75,6 +78,7 @@ type DBClusterSpec struct {
 	// default.
 	//
 	// Example: mySubnetgroup
+	// +optional
 	DBSubnetGroupName string `json:"dbSubnetGroupName,optional"`
 
 	// The name for your database of up to 64 alphanumeric characters. If you do
@@ -90,6 +94,7 @@ type DBClusterSpec struct {
 	DeletionProtection bool `json:"deletionProtection,required"`
 
 	// DestinationRegion is used for presigning the request to a given region.
+	// +optional
 	DestinationRegion string `json:"destinationRegion,optional"`
 
 	// The list of log types that need to be enabled for exporting to CloudWatch
@@ -105,6 +110,7 @@ type DBClusterSpec struct {
 	//
 	// Possible value is postgresql.
 	//TODO: add AnyOf by hand since controller-gen does not have this baked in: https://github.com/kubernetes-sigs/controller-tools/issues/461
+	// +optional
 	EnableCloudwatchLogsExports []string `json:"enableCouldWatchLogExport,optional"`
 
 	// A value that indicates whether to enable this DB cluster to forward write
@@ -118,6 +124,7 @@ type DBClusterSpec struct {
 	// are replicated back to this cluster. For the primary DB cluster of an Aurora
 	// global database, this value is used immediately if the primary is demoted
 	// by the FailoverGlobalCluster API operation, but it does nothing until then.
+	// +optional
 	EnableGlobalWriteForwarding bool `json:"enableGlobalWriteForwarding,optional"`
 
 	// A value that indicates whether to enable the HTTP endpoint for an Aurora
@@ -129,6 +136,7 @@ type DBClusterSpec struct {
 	//
 	// For more information, see Using the Data API for Aurora Serverless (https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/data-api.html)
 	// in the Amazon Aurora User Guide.
+	// +optional
 	EnableHttpEndpoint bool `json:"enableHttpEndpoint,optional"`
 
 	// The name of the database engine to be used for this DB cluster.
@@ -215,9 +223,11 @@ type DBClusterSpec struct {
 	// If you create a read replica of an encrypted DB cluster in another AWS Region,
 	// you must set KmsKeyId to a AWS KMS key identifier that is valid in the destination
 	// AWS Region. This CMK is used to encrypt the read replica in that AWS Region.
+	// +optional
 	KmsKeyId string `json:"kmsKeyID,optional"`
 
 	// Specifies the secret to use
+	// +optional
 	MasterUserPasswordSecretRef MasterUserPasswordSecretRef `json:"masterUserPasswordSecretRef,optional"`
 
 	// The name of the master user for the DB cluster.
@@ -231,10 +241,12 @@ type DBClusterSpec struct {
 	// specified option group.
 	// Permanent options can't be removed from an option group. The option group
 	// can't be removed from a DB cluster once it is associated with a DB cluster.
+	// +optional
 	OptionGroupName string `json:"optionGroupName,optional"`
 
 	// The port number on which the instances in the DB cluster accept connections.
 	// Default: 3306 if engine is set as aurora or 5432 if set to aurora-postgresql.
+	// +optional
 	Port int64 `json:"port,optional"`
 
 	// The daily time range during which automated backups are created if automated
@@ -254,6 +266,7 @@ type DBClusterSpec struct {
 	//    * Must not conflict with the preferred maintenance window.
 	//
 	//    * Must be at least 30 minutes.
+	// +optional
 	PreferredBackupWindow string `json:"preferredBackupWindow,optional"`
 
 	// The weekly time range during which system maintenance can occur, in Universal
@@ -270,20 +283,28 @@ type DBClusterSpec struct {
 	// Valid Days: Mon, Tue, Wed, Thu, Fri, Sat, Sun.
 	//
 	// Constraints: Minimum 30-minute window.
+	// +optional
 	PreferredMaintenanceWindow string `json:"preferredMaintenanceWindow,optional"`
 
 	// The Amazon Resource Name (ARN) of the source DB instance or DB cluster if
 	// this DB cluster is created as a read replica.
+	// +optional
 	ReplicationSourceIdentifier string `json:"replicationSourceIdentifier,optional"`
 
 	// A value that indicates whether the DB cluster is encrypted.
+	// +optional
 	StorageEncrypted bool `json:"storageEncrypted,optional"`
 
 	// Tags to assign to the DB cluster.
+	// +optional
 	Tags map[string]string `json:"tags,optional"`
 
 	// A list of EC2 VPC security groups to associate with this DB cluster.
+	// +optional
 	VpcSecurityGroupIds []string `json:"vpcSecurityGroupIds,optional"`
+
+	// +optional
+	SkipFinalSnapshot bool `json:"skipFinalSnapshot,optional"`
 }
 
 // DBClusterStatus defines the observed state of DBCluster
