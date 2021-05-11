@@ -6,6 +6,8 @@ import (
 	"github.com/aws/aws-sdk-go/service/rds"
 )
 
+// TODO: These functions need to go away from api dir and need to become mapping function per cloud provider under their own factory implementation
+
 func (in *DBCluster) CreateDBClusterInput(password string) *rds.CreateDBClusterInput {
 	out := &rds.CreateDBClusterInput{
 		DBClusterIdentifier:         aws.String(in.GetDBClusterID()),
