@@ -1,14 +1,6 @@
 version: 2.1
-workflows:
-  version: 2
-  test:
-    jobs:
-      - test
-  build:
-    jobs:
-      - build  
 jobs:
-  test:
+  build:
     working_directory: ~/repo
     docker:
       - image: circleci/golang:1.16
@@ -28,17 +20,7 @@ jobs:
           name: Run tests
           command: |
             make test
-  build:
-    working_directory: ~/repo
-    docker:
-      - image: circleci/golang:1.16
-    steps:
-      - checkout
-      - restore_cache:
-          keys:
-            - go-mod-v4-{{ checksum "go.sum" }}
       - run:
-          name: Run Build
+          name: Build
           command: |
-            make docker-build  
-
+            make docker-build
