@@ -5,6 +5,7 @@ import (
 	"github.com/agill17/db-operator/api/v1alpha1"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/rds"
+	"strconv"
 	"time"
 )
 
@@ -38,9 +39,11 @@ func createDBClusterInput(in *v1alpha1.DBCluster, password string) *rds.CreateDB
 }
 
 func deleteDBClusterInput(in *v1alpha1.DBCluster) *rds.DeleteDBClusterInput {
+	timeNow := time.Now().Unix()
+	timeNowStr := strconv.FormatInt(timeNow, 10)
 	return &rds.DeleteDBClusterInput{
 		DBClusterIdentifier: aws.String(in.GetDBClusterID()),
-		FinalDBSnapshotIdentifier: aws.String(fmt.Sprintf("%s-%s", in.GetDBClusterID(), string(time.Now().Unix()))),
+		FinalDBSnapshotIdentifier: aws.String(fmt.Sprintf("%s-%s", in.GetDBClusterID(), timeNowStr)),
 		SkipFinalSnapshot: aws.Bool(!in.Spec.SkipFinalSnapshot),
 	}
 }
