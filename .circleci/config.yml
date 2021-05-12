@@ -17,9 +17,9 @@ jobs:
           paths:
             - "/go/pkg/mod"
       - run:
-          name: Run tests
+          name: Run vet
           command: |
-            make test
+            make full-vet
       - run:
           name: Build
           command: |
