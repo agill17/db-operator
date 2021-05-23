@@ -44,6 +44,7 @@ func (i InternalAwsClients) GetOrSetMasterPassword(Obj client.Object, client cli
 		return string(existingSecret.Data[key]), nil
 	}
 
+	// else generate a secret and toss it in the creds in secrets manager
 	generatedSecretName := fmt.Sprintf("%s-%s-master-password", Obj.GetNamespace(), Obj.GetName())
 	generatedSecret := &v1.Secret{}
 	if err := client.Get(context.TODO(), types.NamespacedName{
