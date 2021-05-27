@@ -7,7 +7,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/rds"
-	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -19,21 +18,13 @@ func clientObjToDBCluster(obj client.Object) (*v1alpha1.DBCluster, error) {
 	return dbCluster, nil
 }
 
-func (i InternalAwsClients) CreateDBCluster(Obj client.Object, client client.Client, scheme *runtime.Scheme) error {
-	dbCluster, errCasting := clientObjToDBCluster(Obj)
-	if errCasting != nil {
-		return errCasting
-	}
-	pass, err := i.GetOrSetMasterPassword(Obj, client, scheme)
-	if err != nil {
-		return err
-	}
-	_, errCreating := i.rdsClient.CreateDBCluster(createDBClusterInput(dbCluster, pass))
+func (i InternalAwsClients) CreateDBCluster(input *v1alpha1.DBCluster, password string) error {
+	_, errCreating := i.rdsClient.CreateDBCluster(createDBClusterInput(input, password))
 	return errCreating
 }
 
-func (i InternalAwsClients) DeleteDBCluster(Obj client.Object) error {
-	dbCluster, errCasting := clientObjToDBCluster(Obj)
+func (i InternalAwsClients) DeleteDBCluster(input *v1alpha1.DBCluster) error {
+	dbCluster, errCasting := clientObjToDBCluster(input)
 	if errCasting != nil {
 		return errCasting
 	}
@@ -48,28 +39,18 @@ func (i InternalAwsClients) DeleteDBCluster(Obj client.Object) error {
 	return nil
 }
 
-func (i InternalAwsClients) ModifyDBCluster(Obj client.Object, client client.Client, scheme *runtime.Scheme) error {
-	dbCluster, errCasting := clientObjToDBCluster(Obj)
-	if errCasting != nil {
-		return errCasting
-	}
-	pass, err := i.GetOrSetMasterPassword(Obj, client, scheme)
-	if err != nil {
-		return err
-	}
-	if _, errUpdating := i.rdsClient.ModifyDBCluster(modifyDBClusterInput(dbCluster, pass)); errUpdating != nil {
+func (i InternalAwsClients) ModifyDBCluster(input *v1alpha1.DBCluster, password string) error {
+
+	if _, errUpdating := i.rdsClient.ModifyDBCluster(modifyDBClusterInput(input, password)); errUpdating != nil {
 		return errUpdating
 	}
 	return nil
 }
 
-func (i InternalAwsClients) DBClusterExists(Obj client.Object) (bool, error) {
-	dbCluster, errCasting := clientObjToDBCluster(Obj)
-	if errCasting != nil {
-		return false, errCasting
-	}
+func (i InternalAwsClients) DBClusterExists(input *v1alpha1.DBCluster) (bool, error) {
+
 	_, err := i.rdsClient.DescribeDBClusters(&rds.DescribeDBClustersInput{
-		DBClusterIdentifier: aws.String(dbCluster.GetDBClusterID()),
+		DBClusterIdentifier: aws.String(input.GetDBClusterID()),
 	})
 	if err != nil {
 		if awsErr, isAwsErr := err.(awserr.Error); isAwsErr {
@@ -82,6 +63,6 @@ func (i InternalAwsClients) DBClusterExists(Obj client.Object) (bool, error) {
 	return true, nil
 }
 
-func (i InternalAwsClients) IsDBClusterUpToDate(Obj client.Object, client client.Client, scheme *runtime.Scheme) (bool, error) {
+func (i InternalAwsClients) IsDBClusterUpToDate(input *v1alpha1.DBCluster) (bool, error) {
 	panic("implement me")
 }

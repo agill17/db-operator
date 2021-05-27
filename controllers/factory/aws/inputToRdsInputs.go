@@ -42,9 +42,9 @@ func deleteDBClusterInput(in *v1alpha1.DBCluster) *rds.DeleteDBClusterInput {
 	timeNow := time.Now().Unix()
 	timeNowStr := strconv.FormatInt(timeNow, 10)
 	return &rds.DeleteDBClusterInput{
-		DBClusterIdentifier: aws.String(in.GetDBClusterID()),
+		DBClusterIdentifier:       aws.String(in.GetDBClusterID()),
 		FinalDBSnapshotIdentifier: aws.String(fmt.Sprintf("%s-%s", in.GetDBClusterID(), timeNowStr)),
-		SkipFinalSnapshot: aws.Bool(!in.Spec.SkipFinalSnapshot),
+		SkipFinalSnapshot:         aws.Bool(!in.Spec.SkipFinalSnapshot),
 	}
 }
 func modifyDBClusterInput(in *v1alpha1.DBCluster, password string) *rds.ModifyDBClusterInput {

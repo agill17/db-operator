@@ -289,6 +289,8 @@ spec:
                 description: The Amazon Resource Name (ARN) of the source DB instance
                   or DB cluster if this DB cluster is created as a read replica.
                 type: string
+              skipFinalSnapshot:
+                type: boolean
               storageEncrypted:
                 description: A value that indicates whether the DB cluster is encrypted.
                 type: boolean
@@ -305,33 +307,16 @@ spec:
                 type: array
             required:
             - availabilityZones
-            - backupRetentionPeriod
-            - copyTagsToSnapshot
             - databaseName
-            - dbClusterIdentifierOverride
             - dbClusterParameterGroupName
-            - dbSubnetGroupName
             - deletionProtection
-            - destinationRegion
-            - enableCouldWatchLogExport
-            - enableGlobalWriteForwarding
-            - enableHttpEndpoint
             - engine
             - engineMode
             - engineVersion
-            - kmsKeyID
             - masterUserPasswordSecretRef
             - masterUsername
-            - optionGroupName
-            - port
-            - preferredBackupWindow
-            - preferredMaintenanceWindow
             - provider
             - region
-            - replicationSourceIdentifier
-            - storageEncrypted
-            - tags
-            - vpcSecurityGroupIds
             type: object
           status:
             properties:

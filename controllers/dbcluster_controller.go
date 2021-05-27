@@ -20,9 +20,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/agill17/db-operator/controllers/factory"
-	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
-	"k8s.io/apimachinery/pkg/types"
 	"math"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/event"
@@ -68,24 +66,27 @@ func (r *DBClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 		return ctrl.Result{}, err
 	}
 
-	providerSecret := &v1.Secret{}
-	if errGettingSecret := r.Client.Get(context.TODO(), types.NamespacedName{
-		Namespace: cr.Spec.Provider.SecretRef.Namespace,
-		Name:      cr.Spec.Provider.SecretRef.Name,
-	}, providerSecret); errGettingSecret != nil {
-		return ctrl.Result{}, errGettingSecret
-	}
-
+	// add finalizer if needed
 	if errAddingFinalizer := AddFinalizer(dbClusterFinalizer, r.Client, cr); errAddingFinalizer != nil {
 		r.Log.Error(errAddingFinalizer, "Failed to add finalizer")
 		return ctrl.Result{}, errAddingFinalizer
 	}
 
+	// get provider secret
+	providerSecret, errGettingSecret := getSecret(cr.Spec.Provider.SecretRef.Name,
+		cr.Spec.Provider.SecretRef.Namespace, r.Client)
+	if errGettingSecret != nil {
+		r.Log.Error(errGettingSecret, "Failed to get provider secret")
+		return ctrl.Result{}, errGettingSecret
+	}
+
+	// setup cloud clients
 	cloudDBInterface, err := factory.NewCloudDB(cr.Spec.Provider.Type, providerSecret, cr.Spec.Region)
 	if err != nil {
 		return ctrl.Result{}, err
 	}
 
+	// if cr is marked for deletion, handle delete and remove finalizer
 	if cr.GetDeletionTimestamp() != nil {
 		if errDeleting := cloudDBInterface.DeleteDBCluster(cr); errDeleting != nil {
 			return ctrl.Result{}, errDeleting
@@ -94,6 +95,8 @@ func (r *DBClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 			r.Log.Error(errDeletingFinalizer, "Failed to remove finalizer")
 			return ctrl.Result{}, errDeletingFinalizer
 		}
+		// clean up successful, do not requeue
+		r.Log.Info(fmt.Sprintf("Successfully cleaned up dbcluster for %v/%v", cr.GetNamespace(), cr.GetName()))
 		return ctrl.Result{}, nil
 	}
 
@@ -102,20 +105,37 @@ func (r *DBClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 		return ctrl.Result{}, errCheckingExistence
 	}
 
+	// get masterPassword
+	// TODO: we have to store the password somewhere to compare
+	// 	if the user changed it or not vs what we created dbCluster with
+	passwordSecretName := cr.Spec.MasterUserPasswordSecretRef.SecretRef.Name
+	passwordSecretNs := cr.Spec.MasterUserPasswordSecretRef.SecretRef.Namespace
+	passwordKey := cr.Spec.MasterUserPasswordSecretRef.PasswordKey
+	passwordSecret, errGettingPasswordSecret := getSecret(passwordSecretName, passwordSecretNs, r.Client)
+	if errGettingPasswordSecret != nil {
+		return ctrl.Result{}, errGettingPasswordSecret
+	}
+	password, keyFound := passwordSecret.Data[passwordKey]
+	if !keyFound {
+		return ctrl.Result{}, ErrPasswordKeyNotFound{Message: fmt.Sprintf("%v/%v secret does not contain password key for %v/%v dbcluster",
+			passwordSecretNs, passwordSecretName, cr.GetNamespace(), cr.GetName())}
+	}
+	strPassword := string(password)
+
 	if !clusterExists {
-		errCreatingCluster := cloudDBInterface.CreateDBCluster(cr, r.Client, r.Scheme)
+		errCreatingCluster := cloudDBInterface.CreateDBCluster(cr, strPassword)
 		if errCreatingCluster != nil {
 			return ctrl.Result{}, errCreatingCluster
 		}
 	}
 
-	clusterUpToDate, errChecking := cloudDBInterface.IsDBClusterUpToDate(cr, r.Client, r.Scheme)
+	clusterUpToDate, errChecking := cloudDBInterface.IsDBClusterUpToDate(cr)
 	if errChecking != nil {
 		return ctrl.Result{}, errChecking
 	}
 
 	if !clusterUpToDate {
-		return ctrl.Result{}, cloudDBInterface.ModifyDBCluster(cr, r.Client, r.Scheme)
+		return ctrl.Result{}, cloudDBInterface.ModifyDBCluster(cr, strPassword)
 	}
 
 	return ctrl.Result{}, nil

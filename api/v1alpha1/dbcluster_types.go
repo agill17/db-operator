@@ -227,8 +227,7 @@ type DBClusterSpec struct {
 	KmsKeyId string `json:"kmsKeyID,optional"`
 
 	// Specifies the secret to use
-	// +optional
-	MasterUserPasswordSecretRef MasterUserPasswordSecretRef `json:"masterUserPasswordSecretRef,optional"`
+	MasterUserPasswordSecretRef MasterUserPasswordSecretRef `json:"masterUserPasswordSecretRef,required"`
 
 	// The name of the master user for the DB cluster.
 	// Constraints:

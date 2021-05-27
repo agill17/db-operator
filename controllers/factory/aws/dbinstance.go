@@ -1,26 +1,25 @@
 package aws
 
 import (
-	"k8s.io/apimachinery/pkg/runtime"
-	"sigs.k8s.io/controller-runtime/pkg/client"
+	"github.com/agill17/db-operator/api/v1alpha1"
 )
 
-func (i InternalAwsClients) CreateDBInstance(Obj client.Object, client client.Client, scheme *runtime.Scheme) error {
+func (i InternalAwsClients) CreateDBInstance(input *v1alpha1.DBInstance, password string) error {
 	panic("implement me")
 }
 
-func (i InternalAwsClients) DeleteDBInstance(Obj client.Object) error {
+func (i InternalAwsClients) DeleteDBInstance(input *v1alpha1.DBInstance) error {
 	panic("implement me")
 }
 
-func (i InternalAwsClients) ModifyDBInstance(Obj client.Object, client client.Client, scheme *runtime.Scheme) error {
+func (i InternalAwsClients) ModifyDBInstance(input *v1alpha1.DBInstance, password string) error {
 	panic("implement me")
 }
 
-func (i InternalAwsClients) DBInstanceExists(Obj client.Object) (bool, error) {
+func (i InternalAwsClients) DBInstanceExists(input *v1alpha1.DBInstance) (bool, error) {
 	panic("implement me")
 }
 
-func (i InternalAwsClients) IsDBInstanceUpToDate(Obj client.Object, client client.Client, scheme *runtime.Scheme) (bool, error) {
+func (i InternalAwsClients) IsDBInstanceUpToDate(input *v1alpha1.DBInstance) (bool, error) {
 	panic("implement me")
 }
