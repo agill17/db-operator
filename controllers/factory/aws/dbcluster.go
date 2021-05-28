@@ -47,22 +47,29 @@ func (i InternalAwsClients) ModifyDBCluster(input *v1alpha1.DBCluster, password 
 	return nil
 }
 
-func (i InternalAwsClients) DBClusterExists(input *v1alpha1.DBCluster) (bool, error) {
-
-	_, err := i.rdsClient.DescribeDBClusters(&rds.DescribeDBClustersInput{
-		DBClusterIdentifier: aws.String(input.GetDBClusterID()),
+func (i InternalAwsClients) DBClusterExists(dbClusterID string) (bool, string, error) {
+	out, err := i.rdsClient.DescribeDBClusters(&rds.DescribeDBClustersInput{
+		DBClusterIdentifier: aws.String(dbClusterID),
 	})
 	if err != nil {
 		if awsErr, isAwsErr := err.(awserr.Error); isAwsErr {
-			if awsErr.Error() == rds.ErrCodeDBClusterNotFoundFault {
-				return false, nil
+			if awsErr.Code() == rds.ErrCodeDBClusterNotFoundFault {
+				return false, "", nil
 			}
 		}
-		return false, err
+		return false, "", err
 	}
-	return true, nil
+	return true, *out.DBClusters[0].Status, nil
 }
 
 func (i InternalAwsClients) IsDBClusterUpToDate(input *v1alpha1.DBCluster) (bool, error) {
 	panic("implement me")
+}
+
+func (i InternalAwsClients) IsDBClusterReady(dbClusterID string) (bool, error) {
+	out, err := i.rdsClient.DescribeDBClusters(&rds.DescribeDBClustersInput{DBClusterIdentifier: aws.String(dbClusterID)})
+	if err != nil {
+		return false, err
+	}
+	return *out.DBClusters[0].Status == "available", err
 }

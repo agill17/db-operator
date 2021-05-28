@@ -21,10 +21,10 @@ import (
 	"fmt"
 	"github.com/agill17/db-operator/controllers/factory"
 	"k8s.io/apimachinery/pkg/api/errors"
-	"math"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/event"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
+	"time"
 
 	"github.com/go-logr/logr"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -83,14 +83,29 @@ func (r *DBClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 	// setup cloud clients
 	cloudDBInterface, err := factory.NewCloudDB(cr.Spec.Provider.Type, providerSecret, cr.Spec.Region)
 	if err != nil {
+		r.Log.Error(err, "Failed to create a NewCloudDB client interface")
 		return ctrl.Result{}, err
+	}
+
+	clusterExists, status, errCheckingExistence := cloudDBInterface.DBClusterExists(cr.GetDBClusterID())
+	if errCheckingExistence != nil {
+		return ctrl.Result{}, errCheckingExistence
+	}
+	if clusterExists && status != "available" {
+		r.Log.Info(fmt.Sprintf("%v - DBCluster exists, but is not yet ready. Current status: %v", req.NamespacedName.String(), status))
+		return ctrl.Result{Requeue: true, RequeueAfter: 30 * time.Second}, nil
 	}
 
 	// if cr is marked for deletion, handle delete and remove finalizer
 	if cr.GetDeletionTimestamp() != nil {
-		if errDeleting := cloudDBInterface.DeleteDBCluster(cr); errDeleting != nil {
-			return ctrl.Result{}, errDeleting
+		r.Log.Info(fmt.Sprintf("%v - is marked for deletion", req.NamespacedName.String()))
+
+		if clusterExists {
+			if errDeleting := cloudDBInterface.DeleteDBCluster(cr); errDeleting != nil {
+				return ctrl.Result{}, errDeleting
+			}
 		}
+
 		if errDeletingFinalizer := RemoveFinalizer(dbClusterFinalizer, r.Client, cr); errDeletingFinalizer != nil {
 			r.Log.Error(errDeletingFinalizer, "Failed to remove finalizer")
 			return ctrl.Result{}, errDeletingFinalizer
@@ -98,11 +113,6 @@ func (r *DBClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 		// clean up successful, do not requeue
 		r.Log.Info(fmt.Sprintf("Successfully cleaned up dbcluster for %v/%v", cr.GetNamespace(), cr.GetName()))
 		return ctrl.Result{}, nil
-	}
-
-	clusterExists, errCheckingExistence := cloudDBInterface.DBClusterExists(cr)
-	if errCheckingExistence != nil {
-		return ctrl.Result{}, errCheckingExistence
 	}
 
 	// get masterPassword
@@ -123,21 +133,19 @@ func (r *DBClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 	strPassword := string(password)
 
 	if !clusterExists {
-		errCreatingCluster := cloudDBInterface.CreateDBCluster(cr, strPassword)
-		if errCreatingCluster != nil {
-			return ctrl.Result{}, errCreatingCluster
-		}
+		r.Log.Info(fmt.Sprintf("%v - does not exist in cloud, creating now", req.NamespacedName.String()))
+		return ctrl.Result{Requeue: true}, cloudDBInterface.CreateDBCluster(cr, strPassword)
 	}
 
-	clusterUpToDate, errChecking := cloudDBInterface.IsDBClusterUpToDate(cr)
-	if errChecking != nil {
-		return ctrl.Result{}, errChecking
-	}
-
-	if !clusterUpToDate {
-		return ctrl.Result{}, cloudDBInterface.ModifyDBCluster(cr, strPassword)
-	}
-
+	//clusterUpToDate, errChecking := cloudDBInterface.IsDBClusterUpToDate(cr)
+	//if errChecking != nil {
+	//	return ctrl.Result{}, errChecking
+	//}
+	//
+	//if !clusterUpToDate {
+	//	return ctrl.Result{}, cloudDBInterface.ModifyDBCluster(cr, strPassword)
+	//}
+	r.Log.Info(fmt.Sprintf("%v - reconciled", req.NamespacedName.String()))
 	return ctrl.Result{}, nil
 }
 
@@ -145,7 +153,7 @@ func (r *DBClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 func (r *DBClusterReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&agillappsdboperatorv1alpha1.DBCluster{}).
-		WithOptions(controller.Options{MaxConcurrentReconciles: math.MaxInt32}).
+		WithOptions(controller.Options{MaxConcurrentReconciles: 10}).
 		WithEventFilter(predicate.Funcs{
 			UpdateFunc: func(event event.UpdateEvent) bool {
 				oldGen := event.ObjectOld.GetGeneration()

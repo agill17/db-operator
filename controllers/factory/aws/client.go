@@ -11,7 +11,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/rds/rdsiface"
 	"github.com/aws/aws-sdk-go/service/secretsmanager"
 	"github.com/aws/aws-sdk-go/service/secretsmanager/secretsmanageriface"
-	"math"
 	"os"
 	"strings"
 	"sync"
@@ -54,7 +53,6 @@ func NewInternalAwsClient(region string, pName string, providerCredentials map[s
 			CredentialsChainVerboseErrors: aws.Bool(true),
 			Region:                        aws.String(region),
 			Credentials:                   creds,
-			MaxRetries:                    aws.Int(math.MaxInt32),
 		}
 
 		if val, ok := os.LookupEnv(MockAwsEndpoint); ok {

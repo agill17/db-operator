@@ -22,13 +22,15 @@ func createDBClusterInput(in *v1alpha1.DBCluster, password string) *rds.CreateDB
 		KmsKeyId:                    aws.String(in.Spec.KmsKeyId),
 		MasterUserPassword:          aws.String(password),
 		MasterUsername:              aws.String(in.Spec.MasterUsername),
-		Port:                        aws.Int64(in.Spec.Port),
 		PreferredBackupWindow:       aws.String(in.Spec.PreferredBackupWindow),
 		PreferredMaintenanceWindow:  aws.String(in.Spec.PreferredMaintenanceWindow),
 		ReplicationSourceIdentifier: aws.String(in.Spec.ReplicationSourceIdentifier),
 		StorageEncrypted:            aws.Bool(in.Spec.StorageEncrypted),
 		Tags:                        []*rds.Tag{{Key: aws.String("foo"), Value: aws.String("bar")}},
 		VpcSecurityGroupIds:         aws.StringSlice(in.Spec.VpcSecurityGroupIds),
+	}
+	if in.Spec.Port != 0 {
+		out.Port = aws.Int64(in.Spec.Port)
 	}
 
 	if in.Spec.DBClusterIdentifierOverride != "" {
@@ -41,11 +43,14 @@ func createDBClusterInput(in *v1alpha1.DBCluster, password string) *rds.CreateDB
 func deleteDBClusterInput(in *v1alpha1.DBCluster) *rds.DeleteDBClusterInput {
 	timeNow := time.Now().Unix()
 	timeNowStr := strconv.FormatInt(timeNow, 10)
-	return &rds.DeleteDBClusterInput{
-		DBClusterIdentifier:       aws.String(in.GetDBClusterID()),
-		FinalDBSnapshotIdentifier: aws.String(fmt.Sprintf("%s-%s", in.GetDBClusterID(), timeNowStr)),
-		SkipFinalSnapshot:         aws.Bool(!in.Spec.SkipFinalSnapshot),
+	out := &rds.DeleteDBClusterInput{
+		DBClusterIdentifier: aws.String(in.GetDBClusterID()),
+		SkipFinalSnapshot:   aws.Bool(in.Spec.SkipFinalSnapshot),
 	}
+	if !in.Spec.SkipFinalSnapshot {
+		out.FinalDBSnapshotIdentifier = aws.String(fmt.Sprintf("%s-%s", in.GetDBClusterID(), timeNowStr))
+	}
+	return out
 }
 func modifyDBClusterInput(in *v1alpha1.DBCluster, password string) *rds.ModifyDBClusterInput {
 	return nil

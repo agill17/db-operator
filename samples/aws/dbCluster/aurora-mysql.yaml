@@ -1,0 +1,26 @@
+apiVersion: agill.apps.db-operator/v1alpha1
+kind: DBCluster
+metadata:
+  name: dbcluster-sample
+spec:
+  provider:
+    type: aws
+    secretRef:
+      name: personal-aws
+      namespace: kube-system
+  region: us-east-1
+  availabilityZones:
+  - us-east-1a
+  - us-east-1b
+  databaseName: test
+  deletionProtection: false
+  engine: aurora-mysql
+  engineMode: provisioned
+  engineVersion: 5.7.12
+  masterUsername: admin
+  masterUserPasswordSecretRef:
+    passwordKey: masterPassword
+    secretRef:
+      name: master-dbcluster-password
+      namespace: default
+  dbClusterParameterGroupName: default.aurora-mysql5.7

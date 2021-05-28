@@ -1,5 +1,5 @@
 # Image URL to use all building/pushing image targets
-TAG ?= 0.1.0
+TAG ?= 0.2.0
 IMG ?= agill17/db-operator:${TAG}
 
 # Produce CRDs that work back to Kubernetes 1.11 (no version conversion)
@@ -81,6 +81,14 @@ deploy: manifests kustomize ## Deploy controller to the K8s cluster specified in
 undeploy: ## Undeploy controller from the K8s cluster specified in ~/.kube/config.
 	$(KUSTOMIZE) build config/default | kubectl delete -f -
 
+deploy-chart:
+	rsync -rv config/crd/bases/ db-operator/crds
+	kubectl create ns db-operator || true
+	helm upgrade db-operator --namespace=db-operator -i db-operator --wait
+
+undeploy-chart:
+	kubectl delete ns db-operator || true
+	kubectl delete -f db-operator/crds/
 
 CONTROLLER_GEN = $(shell pwd)/bin/controller-gen
 controller-gen: ## Download controller-gen locally if necessary.

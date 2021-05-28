@@ -6,7 +6,7 @@ replicaCount: 1
 
 image:
   repository: agill17/db-operator
-  pullPolicy: IfNotPresent
+  pullPolicy: Always
   # Overrides the image tag whose default is the chart appVersion.
   tag: ""
 
@@ -77,3 +77,13 @@ nodeSelector: {}
 tolerations: []
 
 affinity: {}
+
+resyncPeriod: 300 # secs
+#providers:
+#  - name: aws-account-name
+#    namespace: where to save provider secrets
+#    data:
+#      AWS_ACCESS_KEY_ID:
+#      AWS_SECRET_ACCESS_KEY:
+#      OR
+#      AWS_ROLE_ARN: <assuming the underlying pod has permissions to assume this role>

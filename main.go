@@ -137,5 +137,5 @@ func getSyncPeriod() (time.Duration, error) {
 		return 0, err
 	}
 
-	return time.Duration(rInt), nil
+	return time.Duration(rInt) * time.Second, nil
 }
