@@ -1,9 +1,9 @@
 package controllers
 
-type ErrPasswordKeyNotFound struct {
+type ErrSecretMissingKey struct {
 	Message string
 }
 
-func (e ErrPasswordKeyNotFound) Error() string {
+func (e ErrSecretMissingKey) Error() string {
 	return e.Message
 }

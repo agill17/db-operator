@@ -118,23 +118,18 @@ func (r *DBClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 	// get masterPassword
 	// TODO: we have to store the password somewhere to compare
 	// 	if the user changed it or not vs what we created dbCluster with
-	passwordSecretName := cr.Spec.MasterUserPasswordSecretRef.SecretRef.Name
-	passwordSecretNs := cr.Spec.MasterUserPasswordSecretRef.SecretRef.Namespace
+	passSecretName := cr.Spec.MasterUserPasswordSecretRef.SecretRef.Name
+	passSecretNs := cr.Spec.MasterUserPasswordSecretRef.SecretRef.Namespace
 	passwordKey := cr.Spec.MasterUserPasswordSecretRef.PasswordKey
-	passwordSecret, errGettingPasswordSecret := getSecret(passwordSecretName, passwordSecretNs, r.Client)
-	if errGettingPasswordSecret != nil {
-		return ctrl.Result{}, errGettingPasswordSecret
+	dbPass, errFetchingKey := getSecretValue(passSecretName,
+		passSecretNs, passwordKey, r.Client)
+	if errFetchingKey != nil {
+		return ctrl.Result{}, errFetchingKey
 	}
-	password, keyFound := passwordSecret.Data[passwordKey]
-	if !keyFound {
-		return ctrl.Result{}, ErrPasswordKeyNotFound{Message: fmt.Sprintf("%v/%v secret does not contain password key for %v/%v dbcluster",
-			passwordSecretNs, passwordSecretName, cr.GetNamespace(), cr.GetName())}
-	}
-	strPassword := string(password)
 
 	if !clusterExists {
 		r.Log.Info(fmt.Sprintf("%v - does not exist in cloud, creating now", req.NamespacedName.String()))
-		return ctrl.Result{Requeue: true}, cloudDBInterface.CreateDBCluster(cr, strPassword)
+		return ctrl.Result{Requeue: true}, cloudDBInterface.CreateDBCluster(cr, dbPass)
 	}
 
 	//clusterUpToDate, errChecking := cloudDBInterface.IsDBClusterUpToDate(cr)

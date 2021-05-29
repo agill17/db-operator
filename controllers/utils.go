@@ -39,10 +39,6 @@ func RemoveFinalizer(finalizer string, client client.Client, object client.Objec
 	if err != nil {
 		return err
 	}
-	// if obj is marked as getting deleted, do not try to add the finalizer
-	if metaObj.GetDeletionTimestamp() != nil {
-		return nil
-	}
 	currentFinalizers := metaObj.GetFinalizers()
 	if ok, idx := ListContainsString(currentFinalizers, finalizer); ok {
 		currentFinalizers = append(currentFinalizers[:idx], currentFinalizers[idx+1:]...)
