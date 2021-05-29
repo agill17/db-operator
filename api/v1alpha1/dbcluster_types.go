@@ -307,24 +307,24 @@ type DBClusterSpec struct {
 }
 
 // DBClusterStatus defines the observed state of DBCluster
-type DBClusterState string
+type DBClusterPhase string
 
 const (
-	ClusterPending   = "pending"
-	ClusterAvailable = "available"
-	ClusterCreating  = "creating"
-	ClusterDeleting  = "deleting"
+	ClusterPending   DBClusterPhase = "pending"
+	ClusterAvailable DBClusterPhase = "available"
+	ClusterCreating  DBClusterPhase = "creating"
+	ClusterDeleting  DBClusterPhase = "deleting"
 )
 
 type DBClusterStatus struct {
-	Phase                   DBClusterState `json:"phase"`
+	Phase                   DBClusterPhase `json:"phase"`
 	SecretsManagerVersionID string         `json:"secretsManagerVersionID"`
 }
 
 //+kubebuilder:object:root=true
 //+kubebuilder:subresource:status
-
 // DBCluster is the Schema for the dbclusters API
+// +kubebuilder:printcolumn:name="Phase",type=string,JSONPath=`.status.phase`
 type DBCluster struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`

@@ -16,7 +16,11 @@ spec:
     singular: dbcluster
   scope: Namespaced
   versions:
-  - name: v1alpha1
+  - additionalPrinterColumns:
+    - jsonPath: .status.phase
+      name: Phase
+      type: string
+    name: v1alpha1
     schema:
       openAPIV3Schema:
         description: DBCluster is the Schema for the dbclusters API

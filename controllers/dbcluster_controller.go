@@ -99,7 +99,10 @@ func (r *DBClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 	// if cr is marked for deletion, handle delete and remove finalizer
 	if cr.GetDeletionTimestamp() != nil {
 		r.Log.Info(fmt.Sprintf("%v - is marked for deletion", req.NamespacedName.String()))
-
+		if errUpdatingPhase := UpdateStatusPhase(
+			agillappsdboperatorv1alpha1.ClusterDeleting, cr, r.Client); errUpdatingPhase != nil {
+			return ctrl.Result{}, errUpdatingPhase
+		}
 		if clusterExists {
 			if errDeleting := cloudDBInterface.DeleteDBCluster(cr); errDeleting != nil {
 				return ctrl.Result{}, errDeleting
@@ -128,6 +131,10 @@ func (r *DBClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 	}
 
 	if !clusterExists {
+		if errUpdatingPhase := UpdateStatusPhase(
+			agillappsdboperatorv1alpha1.ClusterCreating, cr, r.Client); errUpdatingPhase != nil {
+			return ctrl.Result{}, errUpdatingPhase
+		}
 		r.Log.Info(fmt.Sprintf("%v - does not exist in cloud, creating now", req.NamespacedName.String()))
 		return ctrl.Result{Requeue: true}, cloudDBInterface.CreateDBCluster(cr, dbPass)
 	}
@@ -141,7 +148,7 @@ func (r *DBClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 	//	return ctrl.Result{}, cloudDBInterface.ModifyDBCluster(cr, strPassword)
 	//}
 	r.Log.Info(fmt.Sprintf("%v - reconciled", req.NamespacedName.String()))
-	return ctrl.Result{}, nil
+	return ctrl.Result{}, UpdateStatusPhase(agillappsdboperatorv1alpha1.ClusterAvailable, cr, r.Client)
 }
 
 // SetupWithManager sets up the controller with the Manager.

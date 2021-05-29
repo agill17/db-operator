@@ -2,6 +2,8 @@ package controllers
 
 import (
 	"context"
+	"errors"
+	"github.com/agill17/db-operator/api/v1alpha1"
 	"k8s.io/apimachinery/pkg/api/meta"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -46,4 +48,19 @@ func RemoveFinalizer(finalizer string, client client.Client, object client.Objec
 		return client.Update(context.TODO(), object)
 	}
 	return nil
+}
+
+func UpdateStatusPhase(phase v1alpha1.DBClusterPhase, object client.Object, client client.Client) error {
+	dbCluster, isDBCluster := object.(*v1alpha1.DBCluster)
+	if !isDBCluster {
+		return errors.New("TODOCreateCustomErrorHere")
+	}
+
+	if dbCluster.Status.Phase != phase {
+		dbCluster.Status.Phase = phase
+		return client.Status().Update(context.TODO(), dbCluster)
+	}
+
+	return nil
+
 }
