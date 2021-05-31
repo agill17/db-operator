@@ -1,5 +1,5 @@
 # Image URL to use all building/pushing image targets
-TAG ?= 0.2.0
+TAG ?= 0.3.0
 IMG ?= agill17/db-operator:${TAG}
 
 # Produce CRDs that work back to Kubernetes 1.11 (no version conversion)
@@ -37,6 +37,7 @@ manifests: controller-gen ## Generate WebhookConfiguration, ClusterRole and Cust
 
 generate: controller-gen ## Generate code containing DeepCopy, DeepCopyInto, and DeepCopyObject method implementations.
 	$(CONTROLLER_GEN) object:headerFile="hack/boilerplate.go.txt" paths="./..."
+	rsync -rv config/crd/bases/ db-operator/crds
 
 fmt: ## Run go fmt against code.
 	go fmt ./...
@@ -65,6 +66,7 @@ docker-build: manifests generate fmt vet ## Build docker image with the manager.
 
 docker-push: ## Push docker image with the manager.
 	docker push ${IMG}
+	yq e ".appVersion=\"${TAG}\"" -i db-operator/Chart.yaml
 
 ##@ Deployment
 
@@ -82,7 +84,6 @@ undeploy: ## Undeploy controller from the K8s cluster specified in ~/.kube/confi
 	$(KUSTOMIZE) build config/default | kubectl delete -f -
 
 deploy-chart:
-	rsync -rv config/crd/bases/ db-operator/crds
 	kubectl create ns db-operator || true
 	helm upgrade db-operator --namespace=db-operator -i db-operator --wait
 

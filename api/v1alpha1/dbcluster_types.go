@@ -324,7 +324,7 @@ type DBClusterStatus struct {
 //+kubebuilder:object:root=true
 //+kubebuilder:subresource:status
 // DBCluster is the Schema for the dbclusters API
-// +kubebuilder:printcolumn:name="Phase",type=string,JSONPath=`.status.phase`
+// +kubebuilder:printcolumn:name="Status",type=string,JSONPath=`.status.phase`
 type DBCluster struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`

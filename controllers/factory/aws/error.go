@@ -31,3 +31,11 @@ type ErrDBClusterPasswordKeyInSecretNotFound struct {
 func (e ErrDBClusterPasswordKeyInSecretNotFound) Error() string {
 	return e.Message
 }
+
+type ErrDBClusterDeletionProtectionEnabled struct {
+	Message string
+}
+
+func (e ErrDBClusterDeletionProtectionEnabled) Error() string {
+	return e.Message
+}

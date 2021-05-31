@@ -50,7 +50,7 @@ func RemoveFinalizer(finalizer string, client client.Client, object client.Objec
 	return nil
 }
 
-func UpdateStatusPhase(phase v1alpha1.DBClusterPhase, object client.Object, client client.Client) error {
+func updateStatusPhase(phase v1alpha1.DBClusterPhase, object client.Object, client client.Client) error {
 	dbCluster, isDBCluster := object.(*v1alpha1.DBCluster)
 	if !isDBCluster {
 		return errors.New("TODOCreateCustomErrorHere")

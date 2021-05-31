@@ -99,7 +99,7 @@ func (r *DBClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 	// if cr is marked for deletion, handle delete and remove finalizer
 	if cr.GetDeletionTimestamp() != nil {
 		r.Log.Info(fmt.Sprintf("%v - is marked for deletion", req.NamespacedName.String()))
-		if errUpdatingPhase := UpdateStatusPhase(
+		if errUpdatingPhase := updateStatusPhase(
 			agillappsdboperatorv1alpha1.ClusterDeleting, cr, r.Client); errUpdatingPhase != nil {
 			return ctrl.Result{}, errUpdatingPhase
 		}
@@ -131,7 +131,7 @@ func (r *DBClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 	}
 
 	if !clusterExists {
-		if errUpdatingPhase := UpdateStatusPhase(
+		if errUpdatingPhase := updateStatusPhase(
 			agillappsdboperatorv1alpha1.ClusterCreating, cr, r.Client); errUpdatingPhase != nil {
 			return ctrl.Result{}, errUpdatingPhase
 		}
@@ -147,8 +147,11 @@ func (r *DBClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 	//if !clusterUpToDate {
 	//	return ctrl.Result{}, cloudDBInterface.ModifyDBCluster(cr, strPassword)
 	//}
+	if err := updateStatusPhase(agillappsdboperatorv1alpha1.ClusterAvailable, cr, r.Client); err != nil {
+		return ctrl.Result{}, err
+	}
 	r.Log.Info(fmt.Sprintf("%v - reconciled", req.NamespacedName.String()))
-	return ctrl.Result{}, UpdateStatusPhase(agillappsdboperatorv1alpha1.ClusterAvailable, cr, r.Client)
+	return ctrl.Result{}, nil
 }
 
 // SetupWithManager sets up the controller with the Manager.

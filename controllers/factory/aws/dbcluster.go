@@ -28,6 +28,13 @@ func (i InternalAwsClients) DeleteDBCluster(input *v1alpha1.DBCluster) error {
 	if errCasting != nil {
 		return errCasting
 	}
+
+	// dont even make a delete attempt call if deletionProtection is enabled in CR spec.
+	if dbCluster.Spec.DeletionProtection {
+		return ErrDBClusterDeletionProtectionEnabled{Message: fmt.Sprintf(
+			"%v/%v: Cannot delete, deletion protection is enabled", dbCluster.GetNamespace(),
+			dbCluster.GetName())}
+	}
 	if _, errDeleting := i.rdsClient.DeleteDBCluster(deleteDBClusterInput(dbCluster)); errDeleting != nil {
 		if awsErr, isAwsErr := errDeleting.(awserr.Error); isAwsErr {
 			if awsErr.Error() == rds.ErrCodeDBClusterNotFoundFault { // if for some reason the dbCluster is not found, ignore and move on
