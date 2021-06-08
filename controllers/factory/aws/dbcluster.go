@@ -29,7 +29,7 @@ func (i InternalAwsClients) DeleteDBCluster(input *v1alpha1.DBCluster) error {
 		return errCasting
 	}
 
-	// dont even make a delete attempt call if deletionProtection is enabled in CR spec.
+	// dont even make a delete attempt if deletionProtection is enabled in CR spec.
 	if dbCluster.Spec.DeletionProtection {
 		return ErrDBClusterDeletionProtectionEnabled{Message: fmt.Sprintf(
 			"%v/%v: Cannot delete, deletion protection is enabled", dbCluster.GetNamespace(),
@@ -71,12 +71,4 @@ func (i InternalAwsClients) DBClusterExists(dbClusterID string) (bool, string, e
 
 func (i InternalAwsClients) IsDBClusterUpToDate(input *v1alpha1.DBCluster) (bool, error) {
 	panic("implement me")
-}
-
-func (i InternalAwsClients) IsDBClusterReady(dbClusterID string) (bool, error) {
-	out, err := i.rdsClient.DescribeDBClusters(&rds.DescribeDBClustersInput{DBClusterIdentifier: aws.String(dbClusterID)})
-	if err != nil {
-		return false, err
-	}
-	return *out.DBClusters[0].Status == "available", err
 }
