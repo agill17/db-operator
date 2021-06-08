@@ -18,6 +18,7 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"os"
 	"strconv"
 	"time"
@@ -87,6 +88,7 @@ func main() {
 			setupLog.Error(errGettingSyncPeriod, "Failed to get sync period")
 			os.Exit(1)
 		}
+		setupLog.Info(fmt.Sprintf("Running controller-manager with resync period set to %v secs", syncPeriod.String()))
 		mgrOptions.SyncPeriod = &syncPeriod
 	}
 
