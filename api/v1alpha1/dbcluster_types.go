@@ -303,6 +303,7 @@ type DBClusterSpec struct {
 	VpcSecurityGroupIds []string `json:"vpcSecurityGroupIds,optional"`
 
 	// +optional
+	// +kubebuilder:default=true
 	SkipFinalSnapshot bool `json:"skipFinalSnapshot,optional"`
 }
 

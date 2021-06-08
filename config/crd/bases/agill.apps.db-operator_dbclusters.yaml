@@ -294,6 +294,7 @@ spec:
                   or DB cluster if this DB cluster is created as a read replica.
                 type: string
               skipFinalSnapshot:
+                default: true
                 type: boolean
               storageEncrypted:
                 description: A value that indicates whether the DB cluster is encrypted.
