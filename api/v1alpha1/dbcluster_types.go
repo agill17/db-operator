@@ -47,7 +47,7 @@ type DBClusterSpec struct {
 	// +kubebuilder:validation:Maximum:=35
 	// +kubebuilder:default:=1
 	// +optional
-	BackupRetentionPeriod int `json:"backupRetentionPeriod,optional"`
+	BackupRetentionPeriod int64 `json:"backupRetentionPeriod,optional"`
 
 	// A value that indicates whether to copy all tags from the DB cluster to snapshots
 	// of the DB cluster. The default is not to copy them.
@@ -315,6 +315,7 @@ const (
 	ClusterAvailable DBClusterPhase = "available"
 	ClusterCreating  DBClusterPhase = "creating"
 	ClusterDeleting  DBClusterPhase = "deleting"
+	ClusterUpdating DBClusterPhase = "updating"
 )
 
 type DBClusterStatus struct {

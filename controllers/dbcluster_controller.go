@@ -141,14 +141,18 @@ func (r *DBClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 		return ctrl.Result{Requeue: true}, nil
 	}
 
-	//clusterUpToDate, errChecking := cloudDBInterface.IsDBClusterUpToDate(cr)
-	//if errChecking != nil {
-	//	return ctrl.Result{}, errChecking
-	//}
-	//
-	//if !clusterUpToDate {
-	//	return ctrl.Result{}, cloudDBInterface.ModifyDBCluster(cr, strPassword)
-	//}
+	isUpToDate, modifyIn, errChecking := cloudDBInterface.IsDBClusterUpToDate(cr)
+	if errChecking != nil {
+		return ctrl.Result{}, errChecking
+	}
+	if !isUpToDate {
+		errUpdatingStatus := updateStatusPhase(agillappsdboperatorv1alpha1.ClusterUpdating, cr, r.Client)
+		if errUpdatingStatus != nil {
+			return ctrl.Result{}, errUpdatingStatus
+		}
+		return ctrl.Result{}, cloudDBInterface.ModifyDBCluster(modifyIn, dbPass)
+	}
+
 	if err := updateStatusPhase(agillappsdboperatorv1alpha1.ClusterAvailable, cr, r.Client); err != nil {
 		return ctrl.Result{}, err
 	}

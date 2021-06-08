@@ -46,9 +46,13 @@ func (i InternalAwsClients) DeleteDBCluster(input *v1alpha1.DBCluster) error {
 	return nil
 }
 
-func (i InternalAwsClients) ModifyDBCluster(input *v1alpha1.DBCluster, password string) error {
-
-	if _, errUpdating := i.rdsClient.ModifyDBCluster(modifyDBClusterInput(input, password)); errUpdating != nil {
+func (i InternalAwsClients) ModifyDBCluster(modifyIn interface{}, password string) error {
+	rdsModifyIn, ok := modifyIn.(*rds.ModifyDBClusterInput)
+	if !ok {
+		return errors.New("ErrModifyDBClusterRecived")
+	}
+	rdsModifyIn.ApplyImmediately = aws.Bool(true)
+	if _, errUpdating := i.rdsClient.ModifyDBCluster(rdsModifyIn); errUpdating != nil {
 		return errUpdating
 	}
 	return nil
@@ -69,6 +73,55 @@ func (i InternalAwsClients) DBClusterExists(dbClusterID string) (bool, string, e
 	return true, *out.DBClusters[0].Status, nil
 }
 
-func (i InternalAwsClients) IsDBClusterUpToDate(input *v1alpha1.DBCluster) (bool, error) {
-	panic("implement me")
+// TODO: refactor, I am not proud of this.. 
+func (i InternalAwsClients) IsDBClusterUpToDate(input *v1alpha1.DBCluster) (bool, interface{}, error) {
+	clusterState, err := i.rdsClient.DescribeDBClusters(&rds.DescribeDBClustersInput{
+		DBClusterIdentifier:aws.String(input.GetDBClusterID())})
+	if err != nil {
+		return false, nil, err
+	}
+	if len(clusterState.DBClusters) != 1 {
+		return false, nil,errors.New("ErrMultipleDBClustersExistsWithTheSameID");
+	}
+	currentState := clusterState.DBClusters[0]
+
+	modifyDBClusterInput := &rds.ModifyDBClusterInput{}
+	if *currentState.EngineVersion != input.Spec.EngineVersion {
+		modifyDBClusterInput.EngineVersion = aws.String(input.Spec.EngineVersion)
+	}
+	if *currentState.HttpEndpointEnabled != input.Spec.EnableHttpEndpoint {
+		modifyDBClusterInput.EnableHttpEndpoint = aws.Bool(input.Spec.EnableHttpEndpoint)
+	}
+	if *currentState.GlobalWriteForwardingRequested != input.Spec.EnableGlobalWriteForwarding {
+		modifyDBClusterInput.EnableGlobalWriteForwarding = aws.Bool(input.Spec.EnableGlobalWriteForwarding)
+	}
+	if *currentState.DeletionProtection != input.Spec.DeletionProtection {
+		modifyDBClusterInput.DeletionProtection = aws.Bool(input.Spec.DeletionProtection)
+	}
+	if *currentState.CopyTagsToSnapshot != input.Spec.CopyTagsToSnapshot {
+		modifyDBClusterInput.CopyTagsToSnapshot = aws.Bool(input.Spec.CopyTagsToSnapshot)
+	}
+	if *currentState.BackupRetentionPeriod != input.Spec.BackupRetentionPeriod {
+		modifyDBClusterInput.BackupRetentionPeriod = aws.Int64(input.Spec.BackupRetentionPeriod)
+	}
+	if *currentState.DBClusterParameterGroup != input.Spec.DBClusterParameterGroupName {
+		modifyDBClusterInput.DBClusterParameterGroupName = aws.String(input.Spec.DBClusterParameterGroupName)
+	}
+	if *currentState.DBClusterIdentifier != input.GetDBClusterID() {
+		modifyDBClusterInput.NewDBClusterIdentifier = aws.String(input.GetDBClusterID())
+	}
+	if *currentState.Port != input.Spec.Port {
+		modifyDBClusterInput.Port = aws.Int64(input.Spec.Port)
+	}
+	if *currentState.PreferredBackupWindow != input.Spec.PreferredBackupWindow {
+		modifyDBClusterInput.PreferredBackupWindow = aws.String(input.Spec.PreferredBackupWindow)
+	}
+	if *currentState.PreferredMaintenanceWindow != input.Spec.PreferredMaintenanceWindow {
+		modifyDBClusterInput.PreferredMaintenanceWindow = aws.String(input.Spec.PreferredMaintenanceWindow)
+	}
+	if len(currentState.VpcSecurityGroups) != len(input.Spec.VpcSecurityGroupIds) {
+		modifyDBClusterInput.VpcSecurityGroupIds = aws.StringSlice(input.Spec.VpcSecurityGroupIds)
+	}
+
+	return modifyDBClusterInput == &rds.ModifyDBClusterInput{}, modifyDBClusterInput, nil
 }

@@ -10,8 +10,8 @@ import (
 
 type DBCluster interface {
 	CreateDBCluster(input *v1alpha1.DBCluster, password string) error
-	ModifyDBCluster(input *v1alpha1.DBCluster, password string) error
-	IsDBClusterUpToDate(input *v1alpha1.DBCluster) (bool, error)
+	ModifyDBCluster(modifyIn interface{}, password string) error
+	IsDBClusterUpToDate(input *v1alpha1.DBCluster) (bool, interface{}, error)
 	DeleteDBCluster(input *v1alpha1.DBCluster) error
 	DBClusterExists(dbClusterID string) (bool, string, error)
 }
