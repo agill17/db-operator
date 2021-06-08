@@ -78,7 +78,11 @@ tolerations: []
 
 affinity: {}
 
-resyncPeriod: 300 # secs
+
+extraEnvs: []
+#- name: RESYNC_PERIOD
+#  value: "300"
+
 #providers:
 #  - name: aws-account-name
 #    namespace: where to save provider secrets

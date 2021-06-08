@@ -44,8 +44,7 @@ var (
 )
 
 const (
-	EnvResyncPeriod           = "RESYNC_PERIOD"
-	DefaultResyncPeriodInSecs = "300"
+	EnvResyncPeriod = "RESYNC_PERIOD"
 )
 
 func init() {
@@ -71,22 +70,27 @@ func main() {
 	flag.Parse()
 
 	ctrl.SetLogger(zap.New(zap.UseFlagOptions(&opts)))
-
-	syncPeriod, err := getSyncPeriod()
-	if err != nil {
-		setupLog.Error(err, "Failed to get sync period")
-		os.Exit(1)
-	}
-	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
+	mgrOptions := ctrl.Options{
 		Namespace:              "",
-		SyncPeriod:             &syncPeriod,
 		Scheme:                 scheme,
 		MetricsBindAddress:     metricsAddr,
 		Port:                   9443,
 		HealthProbeBindAddress: probeAddr,
 		LeaderElection:         enableLeaderElection,
 		LeaderElectionID:       "93f85313.agill.apps.db-operator",
-	})
+	}
+
+	// only setup manager with syncPeriod if the env var is defined.
+	if val, ok := os.LookupEnv(EnvResyncPeriod); ok && val != "" {
+		syncPeriod, errGettingSyncPeriod := getSyncPeriod(val)
+		if errGettingSyncPeriod != nil {
+			setupLog.Error(errGettingSyncPeriod, "Failed to get sync period")
+			os.Exit(1)
+		}
+		mgrOptions.SyncPeriod = &syncPeriod
+	}
+
+	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), mgrOptions)
 	if err != nil {
 		setupLog.Error(err, "unable to start manager")
 		os.Exit(1)
@@ -126,13 +130,8 @@ func main() {
 	}
 }
 
-func getSyncPeriod() (time.Duration, error) {
-	r := DefaultResyncPeriodInSecs
-	if val, ok := os.LookupEnv(EnvResyncPeriod); ok {
-		r = val
-	}
-
-	rInt, err := strconv.Atoi(r)
+func getSyncPeriod(syncPeriodInSecs string) (time.Duration, error) {
+	rInt, err := strconv.Atoi(syncPeriodInSecs)
 	if err != nil {
 		return 0, err
 	}

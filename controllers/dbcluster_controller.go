@@ -22,8 +22,6 @@ import (
 	"github.com/agill17/db-operator/controllers/factory"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
-	"sigs.k8s.io/controller-runtime/pkg/event"
-	"sigs.k8s.io/controller-runtime/pkg/predicate"
 	"time"
 
 	"github.com/go-logr/logr"
@@ -136,7 +134,11 @@ func (r *DBClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 			return ctrl.Result{}, errUpdatingPhase
 		}
 		r.Log.Info(fmt.Sprintf("%v - does not exist in cloud, creating now", req.NamespacedName.String()))
-		return ctrl.Result{Requeue: true}, cloudDBInterface.CreateDBCluster(cr, dbPass)
+		if errCreatingDBCluster := cloudDBInterface.CreateDBCluster(cr, dbPass); errCreatingDBCluster != nil {
+			r.Log.Error(errCreatingDBCluster, fmt.Sprintf("%v - failed to create dbcluster", req.NamespacedName.String()))
+			return ctrl.Result{}, errCreatingDBCluster
+		}
+		return ctrl.Result{Requeue: true}, nil
 	}
 
 	//clusterUpToDate, errChecking := cloudDBInterface.IsDBClusterUpToDate(cr)
@@ -159,12 +161,12 @@ func (r *DBClusterReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&agillappsdboperatorv1alpha1.DBCluster{}).
 		WithOptions(controller.Options{MaxConcurrentReconciles: 10}).
-		WithEventFilter(predicate.Funcs{
-			UpdateFunc: func(event event.UpdateEvent) bool {
-				oldGen := event.ObjectOld.GetGeneration()
-				newGen := event.ObjectNew.GetGeneration()
-				return oldGen == newGen
-			},
-		}).
+		//WithEventFilter(predicate.Funcs{
+		//	UpdateFunc: func(event event.UpdateEvent) bool {
+		//		oldGen := event.ObjectOld.GetGeneration()
+		//		newGen := event.ObjectNew.GetGeneration()
+		//		return oldGen == newGen
+		//	},
+		//}).
 		Complete(r)
 }

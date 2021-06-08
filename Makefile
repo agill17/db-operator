@@ -1,5 +1,5 @@
 # Image URL to use all building/pushing image targets
-TAG ?= 0.3.0
+TAG ?= 0.4.1
 IMG ?= agill17/db-operator:${TAG}
 
 # Produce CRDs that work back to Kubernetes 1.11 (no version conversion)
