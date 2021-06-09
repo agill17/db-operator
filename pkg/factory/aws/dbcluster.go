@@ -48,7 +48,6 @@ func (i InternalAwsClients) DeleteDBCluster(dbCluster *v1alpha1.DBCluster) error
 					if errUpdating := i.ModifyDBCluster(modifyIn); errUpdating != nil {
 						return errUpdating
 					}
-					// TODO: catch this error in dbcluster_controller and quietly requeue
 					return ErrRequeueNeeded{Message: fmt.Sprintf("ErrRequeueNeededToRetryDeleteAfterUpdate")}
 				}
 			}
