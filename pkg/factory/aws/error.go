@@ -39,3 +39,11 @@ type ErrDBClusterDeletionProtectionEnabled struct {
 func (e ErrDBClusterDeletionProtectionEnabled) Error() string {
 	return e.Message
 }
+
+type ErrInvalidTypeWasPassedIn struct {
+	Message string
+}
+
+func (e ErrInvalidTypeWasPassedIn) Error() string {
+	return e.Message
+}

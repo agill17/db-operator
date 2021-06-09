@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/agill17/db-operator/api/v1alpha1"
-	internalAwsImpl "github.com/agill17/db-operator/controllers/factory/aws"
+	internalAwsImpl "github.com/agill17/db-operator/pkg/factory/aws"
 	v1 "k8s.io/api/core/v1"
 )
 

@@ -266,6 +266,7 @@ type DBClusterSpec struct {
 	//
 	//    * Must be at least 30 minutes.
 	// +optional
+	// +kubebuilder:default="23:00-23:30"
 	PreferredBackupWindow string `json:"preferredBackupWindow,optional"`
 
 	// The weekly time range during which system maintenance can occur, in Universal
@@ -283,6 +284,7 @@ type DBClusterSpec struct {
 	//
 	// Constraints: Minimum 30-minute window.
 	// +optional
+	// +kubebuilder:default="sun:06:00-sun:06:30"
 	PreferredMaintenanceWindow string `json:"preferredMaintenanceWindow,optional"`
 
 	// The Amazon Resource Name (ARN) of the source DB instance or DB cluster if
@@ -307,20 +309,9 @@ type DBClusterSpec struct {
 	SkipFinalSnapshot bool `json:"skipFinalSnapshot,optional"`
 }
 
-// DBClusterStatus defines the observed state of DBCluster
-type DBClusterPhase string
-
-const (
-	ClusterPending   DBClusterPhase = "pending"
-	ClusterAvailable DBClusterPhase = "available"
-	ClusterCreating  DBClusterPhase = "creating"
-	ClusterDeleting  DBClusterPhase = "deleting"
-	ClusterUpdating DBClusterPhase = "updating"
-)
-
 type DBClusterStatus struct {
-	Phase                   DBClusterPhase `json:"phase"`
-	SecretsManagerVersionID string         `json:"secretsManagerVersionID"`
+	Phase                   Phase  `json:"phase"`
+	SecretsManagerVersionID string `json:"secretsManagerVersionID"`
 }
 
 //+kubebuilder:object:root=true
@@ -346,13 +337,4 @@ type DBClusterList struct {
 
 func init() {
 	SchemeBuilder.Register(&DBCluster{}, &DBClusterList{})
-}
-
-func (db DBCluster) GetDBClusterPort() int {
-	switch db.Spec.Engine {
-	case "aurora", "aurora-mysql":
-		return 3306
-	default:
-		return 5432
-	}
 }

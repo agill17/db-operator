@@ -1,5 +1,5 @@
 # Image URL to use all building/pushing image targets
-TAG ?= 0.4.1
+TAG ?= 0.4.2
 IMG ?= agill17/db-operator:${TAG}
 
 # Produce CRDs that work back to Kubernetes 1.11 (no version conversion)
@@ -61,7 +61,7 @@ build: generate fmt vet ## Build manager binary.
 run: manifests generate fmt vet ## Run a controller from your host.
 	go run ./main.go
 
-docker-build: manifests generate fmt vet ## Build docker image with the manager.
+docker-build: vet manifests generate fmt  ## Build docker image with the manager.
 	docker build -t ${IMG} .
 
 docker-push: ## Push docker image with the manager.

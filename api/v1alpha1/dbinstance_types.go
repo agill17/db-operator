@@ -34,8 +34,7 @@ type DBInstanceSpec struct {
 
 // DBInstanceStatus defines the observed state of DBInstance
 type DBInstanceStatus struct {
-	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
+	Phase Phase `json:"phase"`
 }
 
 //+kubebuilder:object:root=true

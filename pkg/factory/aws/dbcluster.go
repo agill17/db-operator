@@ -7,13 +7,15 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/rds"
+	"github.com/google/go-cmp/cmp"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 func clientObjToDBCluster(obj client.Object) (*v1alpha1.DBCluster, error) {
 	dbCluster, ok := obj.(*v1alpha1.DBCluster)
 	if !ok {
-		return nil, errors.New(fmt.Sprintf("ErrCasting%TtoDBCluster", obj))
+		errMsg := fmt.Sprintf("Could not type assert %T to %T", obj, v1alpha1.DBCluster{})
+		return nil, ErrInvalidTypeWasPassedIn{Message: errMsg}
 	}
 	return dbCluster, nil
 }
@@ -49,7 +51,8 @@ func (i InternalAwsClients) DeleteDBCluster(input *v1alpha1.DBCluster) error {
 func (i InternalAwsClients) ModifyDBCluster(modifyIn interface{}, password string) error {
 	rdsModifyIn, ok := modifyIn.(*rds.ModifyDBClusterInput)
 	if !ok {
-		return errors.New("ErrModifyDBClusterRecived")
+		errMsg := fmt.Sprintf("Expected Type: %T but got %T in AWS ModifyDBCluster implementation", &rds.ModifyDBClusterInput{}, modifyIn)
+		return ErrInvalidTypeWasPassedIn{Message: errMsg}
 	}
 	rdsModifyIn.ApplyImmediately = aws.Bool(true)
 	if _, errUpdating := i.rdsClient.ModifyDBCluster(rdsModifyIn); errUpdating != nil {
@@ -73,18 +76,17 @@ func (i InternalAwsClients) DBClusterExists(dbClusterID string) (bool, string, e
 	return true, *out.DBClusters[0].Status, nil
 }
 
-// TODO: refactor, I am not proud of this.. 
+// TODO: refactor, I am not proud of this..
 func (i InternalAwsClients) IsDBClusterUpToDate(input *v1alpha1.DBCluster) (bool, interface{}, error) {
 	clusterState, err := i.rdsClient.DescribeDBClusters(&rds.DescribeDBClustersInput{
-		DBClusterIdentifier:aws.String(input.GetDBClusterID())})
+		DBClusterIdentifier: aws.String(input.GetDBClusterID())})
 	if err != nil {
 		return false, nil, err
 	}
 	if len(clusterState.DBClusters) != 1 {
-		return false, nil,errors.New("ErrMultipleDBClustersExistsWithTheSameID");
+		return false, nil, errors.New("ErrMultipleDBClustersExistsWithTheSameID")
 	}
 	currentState := clusterState.DBClusters[0]
-
 	modifyDBClusterInput := &rds.ModifyDBClusterInput{}
 	if *currentState.EngineVersion != input.Spec.EngineVersion {
 		modifyDBClusterInput.EngineVersion = aws.String(input.Spec.EngineVersion)
@@ -92,36 +94,38 @@ func (i InternalAwsClients) IsDBClusterUpToDate(input *v1alpha1.DBCluster) (bool
 	if *currentState.HttpEndpointEnabled != input.Spec.EnableHttpEndpoint {
 		modifyDBClusterInput.EnableHttpEndpoint = aws.Bool(input.Spec.EnableHttpEndpoint)
 	}
-	if *currentState.GlobalWriteForwardingRequested != input.Spec.EnableGlobalWriteForwarding {
+	if currentState.GlobalWriteForwardingRequested != nil && *currentState.GlobalWriteForwardingRequested != input.Spec.EnableGlobalWriteForwarding {
 		modifyDBClusterInput.EnableGlobalWriteForwarding = aws.Bool(input.Spec.EnableGlobalWriteForwarding)
 	}
-	if *currentState.DeletionProtection != input.Spec.DeletionProtection {
+	if currentState.DeletionProtection != nil && *currentState.DeletionProtection != input.Spec.DeletionProtection {
 		modifyDBClusterInput.DeletionProtection = aws.Bool(input.Spec.DeletionProtection)
 	}
-	if *currentState.CopyTagsToSnapshot != input.Spec.CopyTagsToSnapshot {
+	if currentState.CopyTagsToSnapshot != nil && *currentState.CopyTagsToSnapshot != input.Spec.CopyTagsToSnapshot {
 		modifyDBClusterInput.CopyTagsToSnapshot = aws.Bool(input.Spec.CopyTagsToSnapshot)
 	}
-	if *currentState.BackupRetentionPeriod != input.Spec.BackupRetentionPeriod {
+	if currentState.BackupRetentionPeriod != nil && *currentState.BackupRetentionPeriod != input.Spec.BackupRetentionPeriod {
 		modifyDBClusterInput.BackupRetentionPeriod = aws.Int64(input.Spec.BackupRetentionPeriod)
 	}
-	if *currentState.DBClusterParameterGroup != input.Spec.DBClusterParameterGroupName {
+	if currentState.DBClusterParameterGroup != nil && *currentState.DBClusterParameterGroup != input.Spec.DBClusterParameterGroupName {
 		modifyDBClusterInput.DBClusterParameterGroupName = aws.String(input.Spec.DBClusterParameterGroupName)
 	}
 	if *currentState.DBClusterIdentifier != input.GetDBClusterID() {
 		modifyDBClusterInput.NewDBClusterIdentifier = aws.String(input.GetDBClusterID())
 	}
-	if *currentState.Port != input.Spec.Port {
+	if currentState.Port != nil && input.Spec.Port != 0 && *currentState.Port != input.Spec.Port {
 		modifyDBClusterInput.Port = aws.Int64(input.Spec.Port)
 	}
-	if *currentState.PreferredBackupWindow != input.Spec.PreferredBackupWindow {
+	if currentState.PreferredBackupWindow != nil && *currentState.PreferredBackupWindow != input.Spec.PreferredBackupWindow {
 		modifyDBClusterInput.PreferredBackupWindow = aws.String(input.Spec.PreferredBackupWindow)
 	}
-	if *currentState.PreferredMaintenanceWindow != input.Spec.PreferredMaintenanceWindow {
+	if currentState.PreferredMaintenanceWindow != nil && *currentState.PreferredMaintenanceWindow != input.Spec.PreferredMaintenanceWindow {
 		modifyDBClusterInput.PreferredMaintenanceWindow = aws.String(input.Spec.PreferredMaintenanceWindow)
 	}
-	if len(currentState.VpcSecurityGroups) != len(input.Spec.VpcSecurityGroupIds) {
-		modifyDBClusterInput.VpcSecurityGroupIds = aws.StringSlice(input.Spec.VpcSecurityGroupIds)
-	}
+	// TODO: check VPC-SG and note that AWS by default adds a security group so beware when comparing with desired state with empty vpc-sg
 
-	return modifyDBClusterInput == &rds.ModifyDBClusterInput{}, modifyDBClusterInput, nil
+	isUpToDate := cmp.Equal(modifyDBClusterInput, &rds.ModifyDBClusterInput{})
+	if !isUpToDate {
+		modifyDBClusterInput.DBClusterIdentifier = aws.String(input.GetDBClusterID())
+	}
+	return isUpToDate, modifyDBClusterInput, nil
 }

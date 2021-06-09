@@ -9,10 +9,21 @@ import (
 	"time"
 )
 
+func mapToRdsTags(t map[string]string) []*rds.Tag {
+	var out []*rds.Tag
+	for k, v := range t {
+		out = append(out, &rds.Tag{
+			Key:   aws.String(k),
+			Value: aws.String(v),
+		})
+	}
+	return out
+}
+
 func createDBClusterInput(in *v1alpha1.DBCluster, password string) *rds.CreateDBClusterInput {
 	out := &rds.CreateDBClusterInput{
 		DBClusterIdentifier:         aws.String(in.GetDBClusterID()),
-		CopyTagsToSnapshot:          aws.Bool(true),
+		CopyTagsToSnapshot:          aws.Bool(in.Spec.CopyTagsToSnapshot),
 		DatabaseName:                aws.String(in.Spec.DatabaseName),
 		DeletionProtection:          aws.Bool(in.Spec.DeletionProtection),
 		EnableCloudwatchLogsExports: aws.StringSlice(in.Spec.EnableCloudwatchLogsExports),
@@ -22,15 +33,19 @@ func createDBClusterInput(in *v1alpha1.DBCluster, password string) *rds.CreateDB
 		KmsKeyId:                    aws.String(in.Spec.KmsKeyId),
 		MasterUserPassword:          aws.String(password),
 		MasterUsername:              aws.String(in.Spec.MasterUsername),
-		PreferredBackupWindow:       aws.String(in.Spec.PreferredBackupWindow),
-		PreferredMaintenanceWindow:  aws.String(in.Spec.PreferredMaintenanceWindow),
 		ReplicationSourceIdentifier: aws.String(in.Spec.ReplicationSourceIdentifier),
 		StorageEncrypted:            aws.Bool(in.Spec.StorageEncrypted),
-		Tags:                        []*rds.Tag{{Key: aws.String("foo"), Value: aws.String("bar")}},
+		Tags:                        mapToRdsTags(in.Spec.Tags),
 		VpcSecurityGroupIds:         aws.StringSlice(in.Spec.VpcSecurityGroupIds),
 	}
 	if in.Spec.Port != 0 {
 		out.Port = aws.Int64(in.Spec.Port)
+	}
+	if in.Spec.PreferredMaintenanceWindow != "" {
+		out.PreferredMaintenanceWindow = aws.String(in.Spec.PreferredMaintenanceWindow)
+	}
+	if in.Spec.PreferredBackupWindow != "" {
+		out.PreferredBackupWindow = aws.String(in.Spec.PreferredBackupWindow)
 	}
 
 	if in.Spec.DBClusterIdentifierOverride != "" {

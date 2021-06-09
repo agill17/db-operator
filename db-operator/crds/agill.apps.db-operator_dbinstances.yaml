@@ -43,6 +43,11 @@ spec:
             type: object
           status:
             description: DBInstanceStatus defines the observed state of DBInstance
+            properties:
+              phase:
+                type: string
+            required:
+            - phase
             type: object
         type: object
     served: true

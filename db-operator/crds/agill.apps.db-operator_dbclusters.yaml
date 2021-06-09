@@ -54,6 +54,7 @@ spec:
                 description: "The number of days for which automated backups are retained.
                   \n For AWS, Default: 1 \n Constraints:    * Must be a value from
                   1 to 35"
+                format: int64
                 maximum: 35
                 minimum: 1
                 type: integer
@@ -242,6 +243,7 @@ spec:
                 format: int64
                 type: integer
               preferredBackupWindow:
+                default: 23:00-23:30
                 description: "The daily time range during which automated backups
                   are created if automated backups are enabled using the BackupRetentionPeriod
                   parameter. \n The default is a 30-minute window selected at random
@@ -253,6 +255,7 @@ spec:
                   window. \n    * Must be at least 30 minutes."
                 type: string
               preferredMaintenanceWindow:
+                default: sun:06:00-sun:06:30
                 description: "The weekly time range during which system maintenance
                   can occur, in Universal Coordinated Time (UTC). \n Format: ddd:hh24:mi-ddd:hh24:mi
                   \n The default is a 30-minute window selected at random from an
@@ -326,7 +329,6 @@ spec:
           status:
             properties:
               phase:
-                description: DBClusterStatus defines the observed state of DBCluster
                 type: string
               secretsManagerVersionID:
                 type: string

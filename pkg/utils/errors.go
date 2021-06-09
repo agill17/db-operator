@@ -1,4 +1,4 @@
-package controllers
+package utils
 
 type ErrSecretMissingKey struct {
 	Message string

@@ -2,7 +2,7 @@ package aws
 
 import (
 	"fmt"
-	vault2 "github.com/agill17/db-operator/controllers/vault"
+	vault2 "github.com/agill17/db-operator/pkg/vault"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/credentials/stscreds"

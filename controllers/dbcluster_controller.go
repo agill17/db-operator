@@ -19,9 +19,12 @@ package controllers
 import (
 	"context"
 	"fmt"
-	"github.com/agill17/db-operator/controllers/factory"
+	"github.com/agill17/db-operator/pkg/factory"
+	"github.com/agill17/db-operator/pkg/utils"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
+	"sigs.k8s.io/controller-runtime/pkg/event"
+	"sigs.k8s.io/controller-runtime/pkg/predicate"
 	"time"
 
 	"github.com/go-logr/logr"
@@ -29,7 +32,7 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	agillappsdboperatorv1alpha1 "github.com/agill17/db-operator/api/v1alpha1"
+	v1alpha1 "github.com/agill17/db-operator/api/v1alpha1"
 )
 
 // DBClusterReconciler reconciles a DBCluster object
@@ -40,23 +43,17 @@ type DBClusterReconciler struct {
 }
 
 var (
-	groupName          = agillappsdboperatorv1alpha1.GroupVersion.Group
-	groupVersion       = agillappsdboperatorv1alpha1.GroupVersion.Version
+	groupName          = v1alpha1.GroupVersion.Group
+	groupVersion       = v1alpha1.GroupVersion.Version
 	dbClusterFinalizer = fmt.Sprintf("%s/%s-finalizer", groupName, groupVersion)
 )
 
-//+kubebuilder:rbac:groups=agill.apps.db-operator,resources=dbclusters,verbs=get;list;watch;create;update;patch;delete
-//+kubebuilder:rbac:groups=agill.apps.db-operator,resources=dbclusters/status,verbs=get;update;patch
-//+kubebuilder:rbac:groups=agill.apps.db-operator,resources=dbclusters/finalizers,verbs=update
-
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
 // move the current state of the cluster closer to the desired state.
-// For more details, check Reconcile and its Result here:
-// - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.7.2/pkg/reconcile
 func (r *DBClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	_ = r.Log.WithValues("dbcluster", req.NamespacedName)
 
-	cr := &agillappsdboperatorv1alpha1.DBCluster{}
+	cr := &v1alpha1.DBCluster{}
 	if err := r.Client.Get(context.TODO(), req.NamespacedName, cr); err != nil {
 		if errors.IsNotFound(err) {
 			return ctrl.Result{}, nil
@@ -65,13 +62,13 @@ func (r *DBClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 	}
 
 	// add finalizer if needed
-	if errAddingFinalizer := AddFinalizer(dbClusterFinalizer, r.Client, cr); errAddingFinalizer != nil {
+	if errAddingFinalizer := utils.AddFinalizer(dbClusterFinalizer, r.Client, cr); errAddingFinalizer != nil {
 		r.Log.Error(errAddingFinalizer, "Failed to add finalizer")
 		return ctrl.Result{}, errAddingFinalizer
 	}
 
 	// get provider secret
-	providerSecret, errGettingSecret := getSecret(cr.Spec.Provider.SecretRef.Name,
+	providerSecret, errGettingSecret := utils.GetSecret(cr.Spec.Provider.SecretRef.Name,
 		cr.Spec.Provider.SecretRef.Namespace, r.Client)
 	if errGettingSecret != nil {
 		r.Log.Error(errGettingSecret, "Failed to get provider secret")
@@ -97,8 +94,8 @@ func (r *DBClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 	// if cr is marked for deletion, handle delete and remove finalizer
 	if cr.GetDeletionTimestamp() != nil {
 		r.Log.Info(fmt.Sprintf("%v - is marked for deletion", req.NamespacedName.String()))
-		if errUpdatingPhase := updateStatusPhase(
-			agillappsdboperatorv1alpha1.ClusterDeleting, cr, r.Client); errUpdatingPhase != nil {
+		if errUpdatingPhase := utils.UpdateStatusPhase(
+			v1alpha1.Creating, cr, r.Client); errUpdatingPhase != nil {
 			return ctrl.Result{}, errUpdatingPhase
 		}
 		if clusterExists {
@@ -107,7 +104,7 @@ func (r *DBClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 			}
 		}
 
-		if errDeletingFinalizer := RemoveFinalizer(dbClusterFinalizer, r.Client, cr); errDeletingFinalizer != nil {
+		if errDeletingFinalizer := utils.RemoveFinalizer(dbClusterFinalizer, r.Client, cr); errDeletingFinalizer != nil {
 			r.Log.Error(errDeletingFinalizer, "Failed to remove finalizer")
 			return ctrl.Result{}, errDeletingFinalizer
 		}
@@ -117,20 +114,19 @@ func (r *DBClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 	}
 
 	// get masterPassword
-	// TODO: we have to store the password somewhere to compare
-	// 	if the user changed it or not vs what we created dbCluster with
+	// TODO: Generate password and make masterUserPassword optional
 	passSecretName := cr.Spec.MasterUserPasswordSecretRef.SecretRef.Name
 	passSecretNs := cr.Spec.MasterUserPasswordSecretRef.SecretRef.Namespace
 	passwordKey := cr.Spec.MasterUserPasswordSecretRef.PasswordKey
-	dbPass, errFetchingKey := getSecretValue(passSecretName,
+	dbPass, errFetchingKey := utils.GetSecretValue(passSecretName,
 		passSecretNs, passwordKey, r.Client)
 	if errFetchingKey != nil {
 		return ctrl.Result{}, errFetchingKey
 	}
 
 	if !clusterExists {
-		if errUpdatingPhase := updateStatusPhase(
-			agillappsdboperatorv1alpha1.ClusterCreating, cr, r.Client); errUpdatingPhase != nil {
+		if errUpdatingPhase := utils.UpdateStatusPhase(
+			v1alpha1.Creating, cr, r.Client); errUpdatingPhase != nil {
 			return ctrl.Result{}, errUpdatingPhase
 		}
 		r.Log.Info(fmt.Sprintf("%v - does not exist in cloud, creating now", req.NamespacedName.String()))
@@ -145,15 +141,17 @@ func (r *DBClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 	if errChecking != nil {
 		return ctrl.Result{}, errChecking
 	}
+
 	if !isUpToDate {
-		errUpdatingStatus := updateStatusPhase(agillappsdboperatorv1alpha1.ClusterUpdating, cr, r.Client)
+		errUpdatingStatus := utils.UpdateStatusPhase(v1alpha1.Updating, cr, r.Client)
+		r.Log.Info(fmt.Sprintf("%v - updating", req.NamespacedName.String()))
 		if errUpdatingStatus != nil {
 			return ctrl.Result{}, errUpdatingStatus
 		}
-		return ctrl.Result{}, cloudDBInterface.ModifyDBCluster(modifyIn, dbPass)
+		return ctrl.Result{Requeue: true}, cloudDBInterface.ModifyDBCluster(modifyIn, dbPass)
 	}
 
-	if err := updateStatusPhase(agillappsdboperatorv1alpha1.ClusterAvailable, cr, r.Client); err != nil {
+	if err := utils.UpdateStatusPhase(v1alpha1.Available, cr, r.Client); err != nil {
 		return ctrl.Result{}, err
 	}
 	r.Log.Info(fmt.Sprintf("%v - reconciled", req.NamespacedName.String()))
@@ -163,14 +161,15 @@ func (r *DBClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 // SetupWithManager sets up the controller with the Manager.
 func (r *DBClusterReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&agillappsdboperatorv1alpha1.DBCluster{}).
+		For(&v1alpha1.DBCluster{}).
 		WithOptions(controller.Options{MaxConcurrentReconciles: 10}).
-		//WithEventFilter(predicate.Funcs{
-		//	UpdateFunc: func(event event.UpdateEvent) bool {
-		//		oldGen := event.ObjectOld.GetGeneration()
-		//		newGen := event.ObjectNew.GetGeneration()
-		//		return oldGen == newGen
-		//	},
-		//}).
+		WithEventFilter(predicate.Funcs{
+			UpdateFunc: func(event event.UpdateEvent) bool {
+				// return true if the update event needs to be processed
+				oldGen := event.ObjectOld.GetGeneration()
+				newGen := event.ObjectNew.GetGeneration()
+				return oldGen != newGen
+			},
+		}).
 		Complete(r)
 }

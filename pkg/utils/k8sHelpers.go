@@ -1,4 +1,4 @@
-package controllers
+package utils
 
 import (
 	"context"
@@ -8,7 +8,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func getSecret(name, namespace string, client client.Client) (*v1.Secret, error) {
+func GetSecret(name, namespace string, client client.Client) (*v1.Secret, error) {
 	secret := &v1.Secret{}
 	if err := client.Get(context.TODO(), types.NamespacedName{
 		Namespace: namespace,
@@ -19,8 +19,8 @@ func getSecret(name, namespace string, client client.Client) (*v1.Secret, error)
 	return secret, nil
 }
 
-func getSecretValue(name, namespace, key string, client client.Client) (string, error) {
-	s, err := getSecret(name, namespace, client)
+func GetSecretValue(name, namespace, key string, client client.Client) (string, error) {
+	s, err := GetSecret(name, namespace, client)
 	if err != nil {
 		return "", err
 	}
