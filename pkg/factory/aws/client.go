@@ -11,6 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/rds/rdsiface"
 	"github.com/aws/aws-sdk-go/service/secretsmanager"
 	"github.com/aws/aws-sdk-go/service/secretsmanager/secretsmanageriface"
+	"github.com/go-logr/logr"
 	"os"
 	"strings"
 	"sync"
@@ -25,6 +26,7 @@ type InternalAwsClients struct {
 	smClient     secretsmanageriface.SecretsManagerAPI
 	cacheKeyName string
 	creds        *credentials.Credentials
+	logger       logr.Logger
 }
 
 const (
@@ -40,7 +42,7 @@ func getAwsClientCacheKey(pName, region string) string {
 	return fmt.Sprintf("aws-%v-%v", pName, region)
 }
 
-func NewInternalAwsClient(region string, pName string, providerCredentials map[string][]byte) (*InternalAwsClients, error) {
+func NewInternalAwsClient(logger logr.Logger, region string, pName string, providerCredentials map[string][]byte) (*InternalAwsClients, error) {
 	cacheKeyName := getAwsClientCacheKey(pName, region)
 	cachedInternalAwsClient, ok := awsClientCache.Load(cacheKeyName)
 	if !ok {
@@ -64,6 +66,7 @@ func NewInternalAwsClient(region string, pName string, providerCredentials map[s
 			smClient:     secretsmanager.New(sess, awsClientCfg),
 			cacheKeyName: cacheKeyName,
 			creds:        creds,
+			logger:       logger,
 		}
 		// cache key is deleted when access key id is no longer valid
 		awsClientCache.Store(cacheKeyName, r)

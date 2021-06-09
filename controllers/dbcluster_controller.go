@@ -20,6 +20,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/agill17/db-operator/pkg/factory"
+	"github.com/agill17/db-operator/pkg/factory/aws"
 	"github.com/agill17/db-operator/pkg/utils"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
@@ -76,7 +77,7 @@ func (r *DBClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 	}
 
 	// setup cloud clients
-	cloudDBInterface, err := factory.NewCloudDB(cr.Spec.Provider.Type, providerSecret, cr.Spec.Region)
+	cloudDBInterface, err := factory.NewCloudDB(r.Log, cr.Spec.Provider.Type, providerSecret, cr.Spec.Region)
 	if err != nil {
 		r.Log.Error(err, "Failed to create a NewCloudDB client interface")
 		return ctrl.Result{}, err
@@ -95,11 +96,14 @@ func (r *DBClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 	if cr.GetDeletionTimestamp() != nil {
 		r.Log.Info(fmt.Sprintf("%v - is marked for deletion", req.NamespacedName.String()))
 		if errUpdatingPhase := utils.UpdateStatusPhase(
-			v1alpha1.Creating, cr, r.Client); errUpdatingPhase != nil {
+			v1alpha1.Deleting, cr, r.Client); errUpdatingPhase != nil {
 			return ctrl.Result{}, errUpdatingPhase
 		}
 		if clusterExists {
 			if errDeleting := cloudDBInterface.DeleteDBCluster(cr); errDeleting != nil {
+				if _, ok := errDeleting.(aws.ErrRequeueNeeded); ok {
+					return ctrl.Result{Requeue: true}, nil
+				}
 				return ctrl.Result{}, errDeleting
 			}
 		}
@@ -148,7 +152,7 @@ func (r *DBClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 		if errUpdatingStatus != nil {
 			return ctrl.Result{}, errUpdatingStatus
 		}
-		return ctrl.Result{Requeue: true}, cloudDBInterface.ModifyDBCluster(modifyIn, dbPass)
+		return ctrl.Result{Requeue: true}, cloudDBInterface.ModifyDBCluster(modifyIn)
 	}
 
 	if err := utils.UpdateStatusPhase(v1alpha1.Available, cr, r.Client); err != nil {
@@ -165,7 +169,6 @@ func (r *DBClusterReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		WithOptions(controller.Options{MaxConcurrentReconciles: 10}).
 		WithEventFilter(predicate.Funcs{
 			UpdateFunc: func(event event.UpdateEvent) bool {
-				// return true if the update event needs to be processed
 				oldGen := event.ObjectOld.GetGeneration()
 				newGen := event.ObjectNew.GetGeneration()
 				return oldGen != newGen

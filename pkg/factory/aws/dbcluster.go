@@ -8,39 +8,49 @@ import (
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/google/go-cmp/cmp"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func clientObjToDBCluster(obj client.Object) (*v1alpha1.DBCluster, error) {
-	dbCluster, ok := obj.(*v1alpha1.DBCluster)
-	if !ok {
-		errMsg := fmt.Sprintf("Could not type assert %T to %T", obj, v1alpha1.DBCluster{})
-		return nil, ErrInvalidTypeWasPassedIn{Message: errMsg}
-	}
-	return dbCluster, nil
-}
+const (
+	// the why - because I cannot find rds.ErrCodeInvalidParameterCombination :/
+	deletionProtectionErrMessage = "Cannot delete protected Cluster, please disable deletion protection and try again."
+)
 
 func (i InternalAwsClients) CreateDBCluster(input *v1alpha1.DBCluster, password string) error {
 	_, errCreating := i.rdsClient.CreateDBCluster(createDBClusterInput(input, password))
 	return errCreating
 }
 
-func (i InternalAwsClients) DeleteDBCluster(input *v1alpha1.DBCluster) error {
-	dbCluster, errCasting := clientObjToDBCluster(input)
-	if errCasting != nil {
-		return errCasting
-	}
-
+func (i InternalAwsClients) DeleteDBCluster(dbCluster *v1alpha1.DBCluster) error {
+	namespacedName := fmt.Sprintf("%s/%s", dbCluster.GetNamespace(), dbCluster.GetName())
 	// dont even make a delete attempt if deletionProtection is enabled in CR spec.
 	if dbCluster.Spec.DeletionProtection {
 		return ErrDBClusterDeletionProtectionEnabled{Message: fmt.Sprintf(
 			"%v/%v: Cannot delete, deletion protection is enabled", dbCluster.GetNamespace(),
 			dbCluster.GetName())}
 	}
+
 	if _, errDeleting := i.rdsClient.DeleteDBCluster(deleteDBClusterInput(dbCluster)); errDeleting != nil {
 		if awsErr, isAwsErr := errDeleting.(awserr.Error); isAwsErr {
-			if awsErr.Error() == rds.ErrCodeDBClusterNotFoundFault { // if for some reason the dbCluster is not found, ignore and move on
+			switch awsErr.Error() {
+			case rds.ErrCodeDBClusterNotFoundFault:
+				i.logger.Info(fmt.Sprintf("%v - does not exist, nothing to delete.", namespacedName))
 				return nil
+			}
+			// if the error message says the following,
+			// attempt to do a update in case user changed the deletionProtection after deleting CR
+			if awsErr.Message() == deletionProtectionErrMessage {
+				i.logger.Info(fmt.Sprintf("%v - has deletionProtection enabled in AWS, checking if updating can resolve this.", namespacedName))
+				isUpToDate, modifyIn, err := i.IsDBClusterUpToDate(dbCluster)
+				if err != nil {
+					return err
+				}
+				if !isUpToDate {
+					if errUpdating := i.ModifyDBCluster(modifyIn); errUpdating != nil {
+						return errUpdating
+					}
+					// TODO: catch this error in dbcluster_controller and quietly requeue
+					return ErrRequeueNeeded{Message: fmt.Sprintf("ErrRequeueNeededToRetryDeleteAfterUpdate")}
+				}
 			}
 		}
 		return errDeleting
@@ -48,7 +58,7 @@ func (i InternalAwsClients) DeleteDBCluster(input *v1alpha1.DBCluster) error {
 	return nil
 }
 
-func (i InternalAwsClients) ModifyDBCluster(modifyIn interface{}, password string) error {
+func (i InternalAwsClients) ModifyDBCluster(modifyIn interface{}) error {
 	rdsModifyIn, ok := modifyIn.(*rds.ModifyDBClusterInput)
 	if !ok {
 		errMsg := fmt.Sprintf("Expected Type: %T but got %T in AWS ModifyDBCluster implementation", &rds.ModifyDBClusterInput{}, modifyIn)

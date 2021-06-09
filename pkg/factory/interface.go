@@ -5,12 +5,13 @@ import (
 	"fmt"
 	"github.com/agill17/db-operator/api/v1alpha1"
 	internalAwsImpl "github.com/agill17/db-operator/pkg/factory/aws"
+	"github.com/go-logr/logr"
 	v1 "k8s.io/api/core/v1"
 )
 
 type DBCluster interface {
 	CreateDBCluster(input *v1alpha1.DBCluster, password string) error
-	ModifyDBCluster(modifyIn interface{}, password string) error
+	ModifyDBCluster(modifyIn interface{}) error
 	IsDBClusterUpToDate(input *v1alpha1.DBCluster) (bool, interface{}, error)
 	DeleteDBCluster(input *v1alpha1.DBCluster) error
 	DBClusterExists(dbClusterID string) (bool, string, error)
@@ -29,9 +30,9 @@ type CloudDB interface {
 	DBInstance
 }
 
-func NewCloudDB(pType v1alpha1.ProviderType, providerSecret *v1.Secret, region string) (CloudDB, error) {
+func NewCloudDB(logger logr.Logger, pType v1alpha1.ProviderType, providerSecret *v1.Secret, region string) (CloudDB, error) {
 	if pType == v1alpha1.AWS {
-		return internalAwsImpl.NewInternalAwsClient(region, string(pType), providerSecret.Data)
+		return internalAwsImpl.NewInternalAwsClient(logger, region, string(pType), providerSecret.Data)
 	}
 
 	return nil, errors.New(fmt.Sprintf("Provider %v is not yet supported..", pType))
