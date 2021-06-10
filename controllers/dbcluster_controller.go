@@ -39,8 +39,9 @@ import (
 // DBClusterReconciler reconciles a DBCluster object
 type DBClusterReconciler struct {
 	client.Client
-	Log    logr.Logger
-	Scheme *runtime.Scheme
+	Log              logr.Logger
+	Scheme           *runtime.Scheme
+	CloudDBInterface factory.CloudDB
 }
 
 var (
@@ -77,17 +78,20 @@ func (r *DBClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 	}
 
 	// setup cloud clients
-	cloudDBInterface, err := factory.NewCloudDB(r.Log, cr.Spec.Provider.Type, providerSecret, cr.Spec.Region)
-	if err != nil {
-		r.Log.Error(err, "Failed to create a NewCloudDB client interface")
-		return ctrl.Result{}, err
+	if r.CloudDBInterface == nil {
+		cloudDBInterface, err := factory.NewCloudDB(r.Log, cr.Spec.Provider.Type, providerSecret, cr.Spec.Region)
+		if err != nil {
+			r.Log.Error(err, "Failed to create a NewCloudDB client interface")
+			return ctrl.Result{}, err
+		}
+		r.CloudDBInterface = cloudDBInterface
 	}
 
-	clusterExists, status, errCheckingExistence := cloudDBInterface.DBClusterExists(cr.GetDBClusterID())
+	clusterExists, status, errCheckingExistence := r.CloudDBInterface.DBClusterExists(cr.GetDBClusterID())
 	if errCheckingExistence != nil {
 		return ctrl.Result{}, errCheckingExistence
 	}
-	if clusterExists && status != "available" {
+	if clusterExists && status != string(v1alpha1.Available) {
 		r.Log.Info(fmt.Sprintf("%v - DBCluster exists, but is not yet ready. Current status: %v", req.NamespacedName.String(), status))
 		return ctrl.Result{Requeue: true, RequeueAfter: 30 * time.Second}, nil
 	}
@@ -100,7 +104,7 @@ func (r *DBClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 			return ctrl.Result{}, errUpdatingPhase
 		}
 		if clusterExists {
-			if errDeleting := cloudDBInterface.DeleteDBCluster(cr); errDeleting != nil {
+			if errDeleting := r.CloudDBInterface.DeleteDBCluster(cr); errDeleting != nil {
 				if _, ok := errDeleting.(aws.ErrRequeueNeeded); ok {
 					return ctrl.Result{Requeue: true}, nil
 				}
@@ -134,14 +138,14 @@ func (r *DBClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 			return ctrl.Result{}, errUpdatingPhase
 		}
 		r.Log.Info(fmt.Sprintf("%v - does not exist in cloud, creating now", req.NamespacedName.String()))
-		if errCreatingDBCluster := cloudDBInterface.CreateDBCluster(cr, dbPass); errCreatingDBCluster != nil {
+		if errCreatingDBCluster := r.CloudDBInterface.CreateDBCluster(cr, dbPass); errCreatingDBCluster != nil {
 			r.Log.Error(errCreatingDBCluster, fmt.Sprintf("%v - failed to create dbcluster", req.NamespacedName.String()))
 			return ctrl.Result{}, errCreatingDBCluster
 		}
 		return ctrl.Result{Requeue: true}, nil
 	}
 
-	isUpToDate, modifyIn, errChecking := cloudDBInterface.IsDBClusterUpToDate(cr)
+	isUpToDate, modifyIn, errChecking := r.CloudDBInterface.IsDBClusterUpToDate(cr)
 	if errChecking != nil {
 		return ctrl.Result{}, errChecking
 	}
@@ -152,7 +156,7 @@ func (r *DBClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 		if errUpdatingStatus != nil {
 			return ctrl.Result{}, errUpdatingStatus
 		}
-		return ctrl.Result{Requeue: true}, cloudDBInterface.ModifyDBCluster(modifyIn)
+		return ctrl.Result{Requeue: true}, r.CloudDBInterface.ModifyDBCluster(modifyIn)
 	}
 
 	if err := utils.UpdateStatusPhase(v1alpha1.Available, cr, r.Client); err != nil {

@@ -36,7 +36,6 @@ func (i InternalAwsClients) DeleteDBCluster(dbCluster *v1alpha1.DBCluster) error
 				i.logger.Info(fmt.Sprintf("%v - does not exist, nothing to delete.", namespacedName))
 				return nil
 			}
-			// if the error message says the following,
 			// attempt to do a update in case user changed the deletionProtection after deleting CR
 			if awsErr.Message() == deletionProtectionErrMessage {
 				i.logger.Info(fmt.Sprintf("%v - has deletionProtection enabled in AWS, checking if updating can resolve this.", namespacedName))
