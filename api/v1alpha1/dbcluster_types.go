@@ -227,7 +227,7 @@ type DBClusterSpec struct {
 	KmsKeyId string `json:"kmsKeyID,optional"`
 
 	// Specifies the secret to use
-	MasterUserPasswordSecretRef MasterUserPasswordSecretRef `json:"masterUserPasswordSecretRef,required"`
+	PasswordRef PasswordRef `json:"passwordRef,required"`
 
 	// The name of the master user for the DB cluster.
 	// Constraints:
@@ -310,8 +310,9 @@ type DBClusterSpec struct {
 }
 
 type DBClusterStatus struct {
-	Phase                   Phase  `json:"phase"`
-	SecretsManagerVersionID string `json:"secretsManagerVersionID"`
+	Phase                           Phase  `json:"phase"`
+	ProviderSecretResourceVersion   string `json:"providerSecretResourceVersion"`
+	DBPasswordSecretResourceVersion string `json:"dbPasswordSecretResourceVersion"`
 }
 
 //+kubebuilder:object:root=true

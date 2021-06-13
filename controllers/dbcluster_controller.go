@@ -22,10 +22,13 @@ import (
 	"github.com/agill17/db-operator/pkg/factory"
 	"github.com/agill17/db-operator/pkg/factory/aws"
 	"github.com/agill17/db-operator/pkg/utils"
+	"github.com/davecgh/go-spew/spew"
+	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
+	"sigs.k8s.io/controller-runtime/pkg/builder"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
-	"sigs.k8s.io/controller-runtime/pkg/event"
-	"sigs.k8s.io/controller-runtime/pkg/predicate"
+	"sigs.k8s.io/controller-runtime/pkg/handler"
+	"sigs.k8s.io/controller-runtime/pkg/source"
 	"time"
 
 	"github.com/go-logr/logr"
@@ -111,7 +114,6 @@ func (r *DBClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 				return ctrl.Result{}, errDeleting
 			}
 		}
-
 		if errDeletingFinalizer := utils.RemoveFinalizer(dbClusterFinalizer, r.Client, cr); errDeletingFinalizer != nil {
 			r.Log.Error(errDeletingFinalizer, "Failed to remove finalizer")
 			return ctrl.Result{}, errDeletingFinalizer
@@ -123,24 +125,24 @@ func (r *DBClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 
 	// get masterPassword
 	// TODO: Generate password and make masterUserPassword optional
-	passSecretName := cr.Spec.MasterUserPasswordSecretRef.SecretRef.Name
-	passSecretNs := cr.Spec.MasterUserPasswordSecretRef.SecretRef.Namespace
-	passwordKey := cr.Spec.MasterUserPasswordSecretRef.PasswordKey
-	dbPass, errFetchingKey := utils.GetSecretValue(passSecretName,
+	passSecretName := cr.Spec.PasswordRef.SecretRef.Name
+	passSecretNs := cr.GetNamespace()
+	passwordKey := cr.Spec.PasswordRef.PasswordKey
+	dbPass, sResourceVersion, errFetchingKey := utils.GetSecretValue(passSecretName,
 		passSecretNs, passwordKey, r.Client)
 	if errFetchingKey != nil {
 		return ctrl.Result{}, errFetchingKey
 	}
 
 	if !clusterExists {
-		if errUpdatingPhase := utils.UpdateStatusPhase(
-			v1alpha1.Creating, cr, r.Client); errUpdatingPhase != nil {
-			return ctrl.Result{}, errUpdatingPhase
-		}
 		r.Log.Info(fmt.Sprintf("%v - does not exist in cloud, creating now", req.NamespacedName.String()))
 		if errCreatingDBCluster := r.CloudDBInterface.CreateDBCluster(cr, dbPass); errCreatingDBCluster != nil {
 			r.Log.Error(errCreatingDBCluster, fmt.Sprintf("%v - failed to create dbcluster", req.NamespacedName.String()))
 			return ctrl.Result{}, errCreatingDBCluster
+		}
+		errUpdatingStatus := r.setStatus(cr, providerSecret.GetResourceVersion(), sResourceVersion, v1alpha1.Creating)
+		if errUpdatingStatus != nil {
+			return ctrl.Result{}, errUpdatingStatus
 		}
 		return ctrl.Result{Requeue: true}, nil
 	}
@@ -151,8 +153,13 @@ func (r *DBClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 	}
 
 	if !isUpToDate {
-		errUpdatingStatus := utils.UpdateStatusPhase(v1alpha1.Updating, cr, r.Client)
+		spew.Dump(modifyIn)
 		r.Log.Info(fmt.Sprintf("%v - updating", req.NamespacedName.String()))
+		errUpdating := r.CloudDBInterface.ModifyDBCluster(modifyIn)
+		if errUpdating != nil {
+			return ctrl.Result{}, errUpdating
+		}
+		errUpdatingStatus := r.setStatus(cr, providerSecret.GetResourceVersion(), sResourceVersion, v1alpha1.Updating)
 		if errUpdatingStatus != nil {
 			return ctrl.Result{}, errUpdatingStatus
 		}
@@ -169,14 +176,31 @@ func (r *DBClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 // SetupWithManager sets up the controller with the Manager.
 func (r *DBClusterReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&v1alpha1.DBCluster{}).
+		For(&v1alpha1.DBCluster{}, builder.WithPredicates(r.dbClusterPredicates())).
+		Watches(
+			&source.Kind{Type: &v1.Secret{}},
+			handler.EnqueueRequestsFromMapFunc(r.dbClusterSecretsEventHandlerFunc()),
+		).
 		WithOptions(controller.Options{MaxConcurrentReconciles: 10}).
-		WithEventFilter(predicate.Funcs{
-			UpdateFunc: func(event event.UpdateEvent) bool {
-				oldGen := event.ObjectOld.GetGeneration()
-				newGen := event.ObjectNew.GetGeneration()
-				return oldGen != newGen
-			},
-		}).
 		Complete(r)
+}
+
+func (r *DBClusterReconciler) setStatus(cr *v1alpha1.DBCluster, newProviderVersion, newPasswordVersion string, newPhase v1alpha1.Phase) error {
+	updateNeeded := false
+	if cr.Status.DBPasswordSecretResourceVersion != newPasswordVersion {
+		updateNeeded = true
+		cr.Status.DBPasswordSecretResourceVersion = newPasswordVersion
+	}
+	if cr.Status.ProviderSecretResourceVersion != newProviderVersion {
+		updateNeeded = true
+		cr.Status.ProviderSecretResourceVersion = newProviderVersion
+	}
+	if cr.Status.Phase != newPhase {
+		updateNeeded = true
+		cr.Status.Phase = newPhase
+	}
+	if updateNeeded {
+		return r.Client.Status().Update(context.TODO(), cr)
+	}
+	return nil
 }

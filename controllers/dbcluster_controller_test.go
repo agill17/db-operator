@@ -77,11 +77,10 @@ func TestDBClusterReconciler_Reconcile(t *testing.T) {
 						EngineMode:        "provisioned",
 						EngineVersion:     "5.7.12",
 						MasterUsername:    "test",
-						MasterUserPasswordSecretRef: v1alpha1.MasterUserPasswordSecretRef{
+						PasswordRef: v1alpha1.PasswordRef{
 							PasswordKey: "password",
-							SecretRef: v1.SecretReference{
-								Name:      "dbcluster-password",
-								Namespace: "default",
+							SecretRef: &v1.LocalObjectReference{
+								Name: "dbcluster-password",
 							},
 						},
 						DBClusterParameterGroupName: "default-aurora-mysql5.7",
@@ -147,18 +146,16 @@ func TestDBClusterReconciler_Reconcile(t *testing.T) {
 						EngineMode:        "provisioned",
 						EngineVersion:     "5.7.12",
 						MasterUsername:    "test",
-						MasterUserPasswordSecretRef: v1alpha1.MasterUserPasswordSecretRef{
+						PasswordRef: v1alpha1.PasswordRef{
 							PasswordKey: "password",
-							SecretRef: v1.SecretReference{
-								Name:      "dbcluster-password",
-								Namespace: "default",
+							SecretRef: &v1.LocalObjectReference{
+								Name: "dbcluster-password",
 							},
 						},
 						DBClusterParameterGroupName: "default-aurora-mysql5.7",
 					},
 					Status: v1alpha1.DBClusterStatus{
-						Phase:                   v1alpha1.Available,
-						SecretsManagerVersionID: "",
+						Phase: v1alpha1.Available,
 					},
 				}, &v1.Secret{
 					ObjectMeta: metav1.ObjectMeta{
@@ -222,18 +219,16 @@ func TestDBClusterReconciler_Reconcile(t *testing.T) {
 						EngineMode:        "provisioned",
 						EngineVersion:     "5.7.12",
 						MasterUsername:    "test",
-						MasterUserPasswordSecretRef: v1alpha1.MasterUserPasswordSecretRef{
+						PasswordRef: v1alpha1.PasswordRef{
 							PasswordKey: "password",
-							SecretRef: v1.SecretReference{
-								Name:      "dbcluster-password",
-								Namespace: "default",
+							SecretRef: &v1.LocalObjectReference{
+								Name: "dbcluster-password",
 							},
 						},
 						DBClusterParameterGroupName: "default-aurora-mysql5.7",
 					},
 					Status: v1alpha1.DBClusterStatus{
-						Phase:                   v1alpha1.Available,
-						SecretsManagerVersionID: "",
+						Phase: v1alpha1.Available,
 					},
 				}, &v1.Secret{
 					ObjectMeta: metav1.ObjectMeta{
@@ -326,18 +321,16 @@ func TestDBClusterReconciler_Reconcile(t *testing.T) {
 						EngineMode:        "provisioned",
 						EngineVersion:     "5.7.12",
 						MasterUsername:    "test",
-						MasterUserPasswordSecretRef: v1alpha1.MasterUserPasswordSecretRef{
+						PasswordRef: v1alpha1.PasswordRef{
 							PasswordKey: "password",
-							SecretRef: v1.SecretReference{
-								Name:      "dbcluster-password",
-								Namespace: "default",
+							SecretRef: &v1.LocalObjectReference{
+								Name: "dbcluster-password",
 							},
 						},
 						DBClusterParameterGroupName: "default-aurora-mysql5.7",
 					},
 					Status: v1alpha1.DBClusterStatus{
-						Phase:                   v1alpha1.Available,
-						SecretsManagerVersionID: "",
+						Phase: v1alpha1.Available,
 					},
 				}),
 				Log:              logf.Log,
@@ -377,18 +370,16 @@ func TestDBClusterReconciler_Reconcile(t *testing.T) {
 						EngineMode:        "provisioned",
 						EngineVersion:     "5.7.12",
 						MasterUsername:    "test",
-						MasterUserPasswordSecretRef: v1alpha1.MasterUserPasswordSecretRef{
+						PasswordRef: v1alpha1.PasswordRef{
 							PasswordKey: "password",
-							SecretRef: v1.SecretReference{
-								Name:      "dbcluster-password",
-								Namespace: "default",
+							SecretRef: &v1.LocalObjectReference{
+								Name: "dbcluster-password",
 							},
 						},
 						DBClusterParameterGroupName: "default-aurora-mysql5.7",
 					},
 					Status: v1alpha1.DBClusterStatus{
-						Phase:                   v1alpha1.Available,
-						SecretsManagerVersionID: "",
+						Phase: v1alpha1.Available,
 					},
 				}, &v1.Secret{
 					ObjectMeta: metav1.ObjectMeta{
@@ -440,11 +431,10 @@ func TestDBClusterReconciler_Reconcile(t *testing.T) {
 						EngineMode:         "provisioned",
 						EngineVersion:      "5.7.12",
 						MasterUsername:     "test",
-						MasterUserPasswordSecretRef: v1alpha1.MasterUserPasswordSecretRef{
+						PasswordRef: v1alpha1.PasswordRef{
 							PasswordKey: "password",
-							SecretRef: v1.SecretReference{
-								Name:      "dbcluster-password",
-								Namespace: "default",
+							SecretRef: &v1.LocalObjectReference{
+								Name: "dbcluster-password",
 							},
 						},
 						DBClusterParameterGroupName: "default-aurora-mysql5.7",
@@ -513,11 +503,10 @@ func TestDBClusterReconciler_Reconcile(t *testing.T) {
 						EngineMode:         "provisioned",
 						EngineVersion:      "5.7.12",
 						MasterUsername:     "test",
-						MasterUserPasswordSecretRef: v1alpha1.MasterUserPasswordSecretRef{
+						PasswordRef: v1alpha1.PasswordRef{
 							PasswordKey: "password",
-							SecretRef: v1.SecretReference{
-								Name:      "dbcluster-password",
-								Namespace: "default",
+							SecretRef: &v1.LocalObjectReference{
+								Name: "dbcluster-password",
 							},
 						},
 						DBClusterParameterGroupName: "default-aurora-mysql5.7",
@@ -586,11 +575,10 @@ func TestDBClusterReconciler_Reconcile(t *testing.T) {
 						EngineMode:         "provisioned",
 						EngineVersion:      "5.7.12",
 						MasterUsername:     "test",
-						MasterUserPasswordSecretRef: v1alpha1.MasterUserPasswordSecretRef{
+						PasswordRef: v1alpha1.PasswordRef{
 							PasswordKey: "password",
-							SecretRef: v1.SecretReference{
-								Name:      "dbcluster-password",
-								Namespace: "default",
+							SecretRef: &v1.LocalObjectReference{
+								Name: "dbcluster-password",
 							},
 						},
 						DBClusterParameterGroupName: "default-aurora-mysql5.7",
