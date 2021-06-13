@@ -7,7 +7,7 @@ spec:
     type: aws
     secretRef:
       name: personal-aws
-      namespace: kube-system
+      namespace: db-operator
   region: us-east-1
   availabilityZones:
   - us-east-1a
@@ -18,9 +18,8 @@ spec:
   engineMode: provisioned
   engineVersion: 5.7.12
   masterUsername: admin
-  masterUserPasswordSecretRef:
+  passwordRef:
     passwordKey: masterPassword
     secretRef:
       name: master-dbcluster-password
-      namespace: default
   dbClusterParameterGroupName: default.aurora-mysql5.7
