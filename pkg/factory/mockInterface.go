@@ -17,8 +17,6 @@ type MockCloudDB struct {
 	ModifyDBClusterErr          error
 }
 
-
-
 func (m *MockCloudDB) CreateDBCluster(input *v1alpha1.DBCluster, password string) error {
 	return m.CreateDBClusterErr
 }
@@ -34,7 +32,6 @@ func (m *MockCloudDB) DeleteDBCluster(input *v1alpha1.DBCluster) error {
 func (m *MockCloudDB) DBClusterExists(dbClusterID string) (bool, string, error) {
 	return m.DBClusterExistsResp, m.DBClusterExistsStatus, m.DBClusterExistsErr
 }
-
 
 //type MockRDS struct {
 //	rdsiface.RDSAPI

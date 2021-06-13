@@ -19,16 +19,16 @@ func GetSecret(name, namespace string, client client.Client) (*v1.Secret, error)
 	return secret, nil
 }
 
-func GetSecretValue(name, namespace, key string, client client.Client) (string, error) {
+func GetSecretValue(name, namespace, key string, client client.Client) (string, string, error) {
 	s, err := GetSecret(name, namespace, client)
 	if err != nil {
-		return "", err
+		return "", "", err
 	}
 
 	val, ok := s.Data[key]
 	if !ok {
-		return "", ErrSecretMissingKey{
+		return "", "", ErrSecretMissingKey{
 			Message: fmt.Sprintf("%v/%v does not contain %v key", namespace, name, key)}
 	}
-	return string(val), nil
+	return string(val), s.GetResourceVersion(), nil
 }
