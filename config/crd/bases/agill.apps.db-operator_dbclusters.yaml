@@ -323,16 +323,10 @@ spec:
             type: object
           status:
             properties:
-              dbPasswordSecretResourceVersion:
-                type: string
               phase:
                 type: string
-              providerSecretResourceVersion:
-                type: string
             required:
-            - dbPasswordSecretResourceVersion
             - phase
-            - providerSecretResourceVersion
             type: object
         type: object
     served: true

@@ -22,11 +22,12 @@ import (
 	"github.com/agill17/db-operator/pkg/factory"
 	"github.com/agill17/db-operator/pkg/factory/aws"
 	"github.com/agill17/db-operator/pkg/utils"
-	"github.com/davecgh/go-spew/spew"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/builder"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
+	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
 	"sigs.k8s.io/controller-runtime/pkg/source"
 	"time"
@@ -56,8 +57,8 @@ var (
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
 // move the current state of the cluster closer to the desired state.
 func (r *DBClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
+	namespacedName := req.NamespacedName.String()
 	_ = r.Log.WithValues("dbcluster", req.NamespacedName)
-
 	cr := &v1alpha1.DBCluster{}
 	if err := r.Client.Get(context.TODO(), req.NamespacedName, cr); err != nil {
 		if errors.IsNotFound(err) {
@@ -90,23 +91,23 @@ func (r *DBClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 		r.CloudDBInterface = cloudDBInterface
 	}
 
-	clusterExists, status, errCheckingExistence := r.CloudDBInterface.DBClusterExists(cr.GetDBClusterID())
+	dbStatus, errCheckingExistence := r.CloudDBInterface.DBClusterExists(cr.GetDBClusterID())
 	if errCheckingExistence != nil {
 		return ctrl.Result{}, errCheckingExistence
 	}
-	if clusterExists && status != string(v1alpha1.Available) {
-		r.Log.Info(fmt.Sprintf("%v - DBCluster exists, but is not yet ready. Current status: %v", req.NamespacedName.String(), status))
+	if dbStatus.Exists && dbStatus.CurrentPhase != string(v1alpha1.Available) {
+		r.Log.Info(fmt.Sprintf("%v - DBCluster exists, but is not yet ready. Current status: %v", namespacedName, dbStatus.CurrentPhase))
 		return ctrl.Result{Requeue: true, RequeueAfter: 30 * time.Second}, nil
 	}
 
 	// if cr is marked for deletion, handle delete and remove finalizer
 	if cr.GetDeletionTimestamp() != nil {
-		r.Log.Info(fmt.Sprintf("%v - is marked for deletion", req.NamespacedName.String()))
+		r.Log.Info(fmt.Sprintf("%v - is marked for deletion", namespacedName))
 		if errUpdatingPhase := utils.UpdateStatusPhase(
 			v1alpha1.Deleting, cr, r.Client); errUpdatingPhase != nil {
 			return ctrl.Result{}, errUpdatingPhase
 		}
-		if clusterExists {
+		if dbStatus.Exists {
 			if errDeleting := r.CloudDBInterface.DeleteDBCluster(cr); errDeleting != nil {
 				if _, ok := errDeleting.(aws.ErrRequeueNeeded); ok {
 					return ctrl.Result{Requeue: true}, nil
@@ -118,8 +119,7 @@ func (r *DBClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 			r.Log.Error(errDeletingFinalizer, "Failed to remove finalizer")
 			return ctrl.Result{}, errDeletingFinalizer
 		}
-		// clean up successful, do not requeue
-		r.Log.Info(fmt.Sprintf("Successfully cleaned up dbcluster for %v/%v", cr.GetNamespace(), cr.GetName()))
+		r.Log.Info(fmt.Sprintf("%v - deleted successfully", namespacedName))
 		return ctrl.Result{}, nil
 	}
 
@@ -128,23 +128,19 @@ func (r *DBClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 	passSecretName := cr.Spec.PasswordRef.SecretRef.Name
 	passSecretNs := cr.GetNamespace()
 	passwordKey := cr.Spec.PasswordRef.PasswordKey
-	dbPass, sResourceVersion, errFetchingKey := utils.GetSecretValue(passSecretName,
+	dbPass, _, errFetchingKey := utils.GetSecretValue(passSecretName,
 		passSecretNs, passwordKey, r.Client)
 	if errFetchingKey != nil {
 		return ctrl.Result{}, errFetchingKey
 	}
 
-	if !clusterExists {
-		r.Log.Info(fmt.Sprintf("%v - does not exist in cloud, creating now", req.NamespacedName.String()))
+	if !dbStatus.Exists {
+		r.Log.Info(fmt.Sprintf("%v - does not exist in cloud, creating now", namespacedName))
 		if errCreatingDBCluster := r.CloudDBInterface.CreateDBCluster(cr, dbPass); errCreatingDBCluster != nil {
-			r.Log.Error(errCreatingDBCluster, fmt.Sprintf("%v - failed to create dbcluster", req.NamespacedName.String()))
+			r.Log.Error(errCreatingDBCluster, fmt.Sprintf("%v - failed to create dbcluster", namespacedName))
 			return ctrl.Result{}, errCreatingDBCluster
 		}
-		errUpdatingStatus := r.setStatus(cr, providerSecret.GetResourceVersion(), sResourceVersion, v1alpha1.Creating)
-		if errUpdatingStatus != nil {
-			return ctrl.Result{}, errUpdatingStatus
-		}
-		return ctrl.Result{Requeue: true}, nil
+		return ctrl.Result{Requeue: true}, utils.UpdateStatusPhase(v1alpha1.Creating, cr, r.Client)
 	}
 
 	isUpToDate, modifyIn, errChecking := r.CloudDBInterface.IsDBClusterUpToDate(cr)
@@ -153,23 +149,24 @@ func (r *DBClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 	}
 
 	if !isUpToDate {
-		spew.Dump(modifyIn)
-		r.Log.Info(fmt.Sprintf("%v - updating", req.NamespacedName.String()))
 		errUpdating := r.CloudDBInterface.ModifyDBCluster(modifyIn)
 		if errUpdating != nil {
 			return ctrl.Result{}, errUpdating
 		}
-		errUpdatingStatus := r.setStatus(cr, providerSecret.GetResourceVersion(), sResourceVersion, v1alpha1.Updating)
-		if errUpdatingStatus != nil {
-			return ctrl.Result{}, errUpdatingStatus
-		}
-		return ctrl.Result{Requeue: true}, r.CloudDBInterface.ModifyDBCluster(modifyIn)
+		r.Log.Info(fmt.Sprintf("%v - updating", namespacedName))
+		return ctrl.Result{Requeue: true}, utils.UpdateStatusPhase(v1alpha1.Updating, cr, r.Client)
 	}
+
+	svcResult, svcName, errReconcilingSvc := r.createOrUpdateExternalNameSvc(cr, dbStatus.Endpoint)
+	if errReconcilingSvc != nil {
+		return ctrl.Result{}, errReconcilingSvc
+	}
+	r.Log.Info(fmt.Sprintf("%s - ExternalName service %s", svcName, svcResult))
 
 	if err := utils.UpdateStatusPhase(v1alpha1.Available, cr, r.Client); err != nil {
 		return ctrl.Result{}, err
 	}
-	r.Log.Info(fmt.Sprintf("%v - reconciled", req.NamespacedName.String()))
+	r.Log.Info(fmt.Sprintf("%v - reconciled", namespacedName))
 	return ctrl.Result{}, nil
 }
 
@@ -177,6 +174,7 @@ func (r *DBClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 func (r *DBClusterReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&v1alpha1.DBCluster{}, builder.WithPredicates(r.dbClusterPredicates())).
+		Owns(&v1.Service{}).
 		Watches(
 			&source.Kind{Type: &v1.Secret{}},
 			handler.EnqueueRequestsFromMapFunc(r.dbClusterSecretsEventHandlerFunc()),
@@ -185,22 +183,21 @@ func (r *DBClusterReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		Complete(r)
 }
 
-func (r *DBClusterReconciler) setStatus(cr *v1alpha1.DBCluster, newProviderVersion, newPasswordVersion string, newPhase v1alpha1.Phase) error {
-	updateNeeded := false
-	if cr.Status.DBPasswordSecretResourceVersion != newPasswordVersion {
-		updateNeeded = true
-		cr.Status.DBPasswordSecretResourceVersion = newPasswordVersion
+func (r *DBClusterReconciler) createOrUpdateExternalNameSvc(cr *v1alpha1.DBCluster, endpoint string) (string, string, error) {
+	svcName := cr.GetName()
+	svc := &v1.Service{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      svcName,
+			Namespace: cr.GetNamespace(),
+		},
+		Spec: v1.ServiceSpec{
+			Type:         v1.ServiceTypeExternalName,
+			ExternalName: endpoint,
+		},
 	}
-	if cr.Status.ProviderSecretResourceVersion != newProviderVersion {
-		updateNeeded = true
-		cr.Status.ProviderSecretResourceVersion = newProviderVersion
-	}
-	if cr.Status.Phase != newPhase {
-		updateNeeded = true
-		cr.Status.Phase = newPhase
-	}
-	if updateNeeded {
-		return r.Client.Status().Update(context.TODO(), cr)
-	}
-	return nil
+
+	res, err := controllerutil.CreateOrUpdate(context.TODO(), r.Client, svc, func() error {
+		return controllerutil.SetControllerReference(cr, svc, r.Scheme)
+	})
+	return string(res), svcName, err
 }

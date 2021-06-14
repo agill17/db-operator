@@ -69,19 +69,25 @@ func (i InternalAwsClients) ModifyDBCluster(modifyIn interface{}) error {
 	return nil
 }
 
-func (i InternalAwsClients) DBClusterExists(dbClusterID string) (bool, string, error) {
+func (i InternalAwsClients) DBClusterExists(dbClusterID string) (*v1alpha1.DBStatus, error) {
 	out, err := i.rdsClient.DescribeDBClusters(&rds.DescribeDBClustersInput{
 		DBClusterIdentifier: aws.String(dbClusterID),
 	})
+	result := &v1alpha1.DBStatus{}
 	if err != nil {
 		if awsErr, isAwsErr := err.(awserr.Error); isAwsErr {
 			if awsErr.Code() == rds.ErrCodeDBClusterNotFoundFault {
-				return false, "", nil
+				return result, nil
 			}
 		}
-		return false, "", err
+		return result, err
 	}
-	return true, *out.DBClusters[0].Status, nil
+	result.CurrentPhase = *out.DBClusters[0].Status
+	result.Exists = true
+	if *out.DBClusters[0].Endpoint != "" {
+		result.Endpoint = *out.DBClusters[0].Endpoint
+	}
+	return result, nil
 }
 
 // TODO: refactor, I am not proud of this..

@@ -11,8 +11,7 @@ type MockCloudDB struct {
 	IsDBClusterUpToDateResp     bool
 	IsDBClusterUpToDateModifyIn interface{}
 	IsDBClusterUpToDateErr      error
-	DBClusterExistsResp         bool
-	DBClusterExistsStatus       string
+	DBStatusResp                *v1alpha1.DBStatus
 	DBClusterExistsErr          error
 	ModifyDBClusterErr          error
 }
@@ -29,8 +28,8 @@ func (m *MockCloudDB) IsDBClusterUpToDate(input *v1alpha1.DBCluster) (bool, inte
 func (m *MockCloudDB) DeleteDBCluster(input *v1alpha1.DBCluster) error {
 	return m.DeleteDBClusterErr
 }
-func (m *MockCloudDB) DBClusterExists(dbClusterID string) (bool, string, error) {
-	return m.DBClusterExistsResp, m.DBClusterExistsStatus, m.DBClusterExistsErr
+func (m *MockCloudDB) DBClusterExists(dbClusterID string) (*v1alpha1.DBStatus, error) {
+	return m.DBStatusResp, m.DBClusterExistsErr
 }
 
 //type MockRDS struct {

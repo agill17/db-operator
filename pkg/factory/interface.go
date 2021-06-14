@@ -14,7 +14,7 @@ type DBCluster interface {
 	ModifyDBCluster(modifyIn interface{}) error
 	IsDBClusterUpToDate(input *v1alpha1.DBCluster) (bool, interface{}, error)
 	DeleteDBCluster(input *v1alpha1.DBCluster) error
-	DBClusterExists(dbClusterID string) (bool, string, error)
+	DBClusterExists(dbClusterID string) (*v1alpha1.DBStatus, error)
 }
 
 type DBInstance interface {

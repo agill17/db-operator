@@ -110,7 +110,9 @@ func TestDBClusterReconciler_Reconcile(t *testing.T) {
 				CloudDBInterface: &factory.MockCloudDB{
 					IsDBClusterUpToDateResp:     true,
 					IsDBClusterUpToDateModifyIn: &rds.ModifyDBClusterInput{},
-					DBClusterExistsResp:         false,
+					DBStatusResp: &v1alpha1.DBStatus{
+						Exists: false,
+					},
 				},
 			},
 		},
@@ -182,8 +184,10 @@ func TestDBClusterReconciler_Reconcile(t *testing.T) {
 				CloudDBInterface: &factory.MockCloudDB{
 					IsDBClusterUpToDateResp:     true,
 					IsDBClusterUpToDateModifyIn: &rds.ModifyDBClusterInput{},
-					DBClusterExistsResp:         true,
-					DBClusterExistsStatus:       string(v1alpha1.Available),
+					DBStatusResp: &v1alpha1.DBStatus{
+						Exists:       true,
+						CurrentPhase: string(v1alpha1.Available),
+					},
 				},
 			},
 		},
@@ -258,8 +262,10 @@ func TestDBClusterReconciler_Reconcile(t *testing.T) {
 						DeletionProtection:  aws.Bool(true),
 						DBClusterIdentifier: aws.String("default-aws-db-cluster"),
 					},
-					DBClusterExistsResp:   true,
-					DBClusterExistsStatus: string(v1alpha1.Available),
+					DBStatusResp: &v1alpha1.DBStatus{
+						Exists:       true,
+						CurrentPhase: string(v1alpha1.Available),
+					},
 				},
 			},
 		},
@@ -284,8 +290,10 @@ func TestDBClusterReconciler_Reconcile(t *testing.T) {
 						DeletionProtection:  aws.Bool(true),
 						DBClusterIdentifier: aws.String("default-aws-db-cluster"),
 					},
-					DBClusterExistsResp:   true,
-					DBClusterExistsStatus: string(v1alpha1.Available),
+					DBStatusResp: &v1alpha1.DBStatus{
+						Exists:       true,
+						CurrentPhase: string(v1alpha1.Available),
+					},
 				},
 			},
 		},
@@ -392,9 +400,15 @@ func TestDBClusterReconciler_Reconcile(t *testing.T) {
 					},
 					Type: v1.SecretTypeOpaque,
 				}),
-				Log:              logf.Log,
-				Scheme:           testScheme,
-				CloudDBInterface: &factory.MockCloudDB{},
+				Log:    logf.Log,
+				Scheme: testScheme,
+				CloudDBInterface: &factory.MockCloudDB{
+					DBClusterExistsErr: nil,
+					DBStatusResp: &v1alpha1.DBStatus{
+						Exists:       false,
+						CurrentPhase: "",
+					},
+				},
 			},
 		},
 		{
@@ -464,8 +478,10 @@ func TestDBClusterReconciler_Reconcile(t *testing.T) {
 				CloudDBInterface: &factory.MockCloudDB{
 					DeleteDBClusterErr:      nil,
 					IsDBClusterUpToDateResp: true,
-					DBClusterExistsResp:     true,
-					DBClusterExistsStatus:   string(v1alpha1.Available),
+					DBStatusResp: &v1alpha1.DBStatus{
+						Exists:       true,
+						CurrentPhase: string(v1alpha1.Available),
+					},
 				},
 			},
 		},
@@ -536,8 +552,10 @@ func TestDBClusterReconciler_Reconcile(t *testing.T) {
 				CloudDBInterface: &factory.MockCloudDB{
 					DeleteDBClusterErr:      aws2.ErrDBClusterDeletionProtectionEnabled{Message: "errDeletionProtectionIsEnabled"},
 					IsDBClusterUpToDateResp: true,
-					DBClusterExistsResp:     true,
-					DBClusterExistsStatus:   string(v1alpha1.Available),
+					DBStatusResp: &v1alpha1.DBStatus{
+						Exists:       true,
+						CurrentPhase: string(v1alpha1.Available),
+					},
 				},
 			},
 		},
@@ -606,8 +624,10 @@ func TestDBClusterReconciler_Reconcile(t *testing.T) {
 				Log:    logf.Log,
 				Scheme: testScheme,
 				CloudDBInterface: &factory.MockCloudDB{
-					DBClusterExistsResp:   true,
-					DBClusterExistsStatus: string(v1alpha1.Creating),
+					DBStatusResp: &v1alpha1.DBStatus{
+						Exists:       true,
+						CurrentPhase: string(v1alpha1.Creating),
+					},
 				},
 			},
 		},
