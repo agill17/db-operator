@@ -310,9 +310,7 @@ type DBClusterSpec struct {
 }
 
 type DBClusterStatus struct {
-	Phase                           Phase  `json:"phase"`
-	ProviderSecretResourceVersion   string `json:"providerSecretResourceVersion"`
-	DBPasswordSecretResourceVersion string `json:"dbPasswordSecretResourceVersion"`
+	Phase Phase `json:"phase"`
 }
 
 //+kubebuilder:object:root=true
