@@ -40,6 +40,14 @@ func (e ErrDBClusterDeletionProtectionEnabled) Error() string {
 	return e.Message
 }
 
+type ErrDBInstanceDeletionProtectionEnabled struct {
+	Message string
+}
+
+func (e ErrDBInstanceDeletionProtectionEnabled) Error() string {
+	return e.Message
+}
+
 type ErrInvalidTypeWasPassedIn struct {
 	Message string
 }

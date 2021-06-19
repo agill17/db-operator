@@ -157,7 +157,7 @@ func (r *DBClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 		return ctrl.Result{Requeue: true}, utils.UpdateStatusPhase(v1alpha1.Updating, cr, r.Client)
 	}
 
-	svcResult, svcName, errReconcilingSvc := r.createOrUpdateExternalNameSvc(cr, dbStatus.Endpoint)
+	svcResult, svcName, errReconcilingSvc := createOrUpdateExternalNameSvc(cr, dbStatus.Endpoint, r.Client, r.Scheme)
 	if errReconcilingSvc != nil {
 		return ctrl.Result{}, errReconcilingSvc
 	}
@@ -183,12 +183,12 @@ func (r *DBClusterReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		Complete(r)
 }
 
-func (r *DBClusterReconciler) createOrUpdateExternalNameSvc(cr *v1alpha1.DBCluster, endpoint string) (string, string, error) {
-	svcName := cr.GetName()
+func createOrUpdateExternalNameSvc(owner metav1.Object, endpoint string, client client.Client, scheme *runtime.Scheme) (string, string, error) {
+	svcName := owner.GetName()
 	svc := &v1.Service{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      svcName,
-			Namespace: cr.GetNamespace(),
+			Namespace: owner.GetNamespace(),
 		},
 		Spec: v1.ServiceSpec{
 			Type:         v1.ServiceTypeExternalName,
@@ -196,8 +196,8 @@ func (r *DBClusterReconciler) createOrUpdateExternalNameSvc(cr *v1alpha1.DBClust
 		},
 	}
 
-	res, err := controllerutil.CreateOrUpdate(context.TODO(), r.Client, svc, func() error {
-		return controllerutil.SetControllerReference(cr, svc, r.Scheme)
+	res, err := controllerutil.CreateOrUpdate(context.TODO(), client, svc, func() error {
+		return controllerutil.SetControllerReference(owner, svc, scheme)
 	})
 	return string(res), svcName, err
 }

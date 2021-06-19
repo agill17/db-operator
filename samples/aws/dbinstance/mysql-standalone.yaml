@@ -1,0 +1,28 @@
+apiVersion: agill.apps.db-operator/v1alpha1
+kind: DBInstance
+metadata:
+  name: mysql-standalone
+  namespace: default
+spec:
+  region: us-east-1
+  provider:
+    type: aws
+    secretRef:
+      name: personal-aws
+      namespace: db-operator
+  allocatedStorage: 20
+  autoMinorVersionUpgrade: false
+  availabilityZone: us-east-1a
+  dbInstanceClass: db.t2.micro
+  dbName: test
+  deletionProtection: false
+  engine: mysql
+  engineVersion: 5.7.33
+  passwordRef:
+    passwordKey: password
+    secretRef:
+      name: mysql-standalone-secret
+  masterUsername: admin
+  storageType: gp2
+  tags:
+    owner: agill

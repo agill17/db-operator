@@ -21,7 +21,7 @@ type DBInstance interface {
 	CreateDBInstance(input *v1alpha1.DBInstance, password string) error
 	DeleteDBInstance(input *v1alpha1.DBInstance) error
 	ModifyDBInstance(input *v1alpha1.DBInstance, password string) error
-	DBInstanceExists(input *v1alpha1.DBInstance) (bool, error)
+	DBInstanceExists(input *v1alpha1.DBInstance) (*v1alpha1.DBStatus, error)
 	IsDBInstanceUpToDate(input *v1alpha1.DBInstance) (bool, error)
 }
 
