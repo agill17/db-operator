@@ -28,7 +28,9 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/builder"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
+	"sigs.k8s.io/controller-runtime/pkg/event"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
+	"sigs.k8s.io/controller-runtime/pkg/predicate"
 	"sigs.k8s.io/controller-runtime/pkg/source"
 	"time"
 
@@ -174,7 +176,9 @@ func (r *DBClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 func (r *DBClusterReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&v1alpha1.DBCluster{}, builder.WithPredicates(r.dbClusterPredicates())).
-		Owns(&v1.Service{}).
+		Owns(&v1.Service{}, builder.WithPredicates(predicate.Funcs{
+			CreateFunc: func(event event.CreateEvent) bool { return false },
+		})).
 		Watches(
 			&source.Kind{Type: &v1.Secret{}},
 			handler.EnqueueRequestsFromMapFunc(r.dbClusterSecretsEventHandlerFunc()),

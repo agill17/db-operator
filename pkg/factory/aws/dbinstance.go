@@ -52,7 +52,7 @@ func (i InternalAwsClients) DBInstanceExists(input *v1alpha1.DBInstance) (*v1alp
 	if resp != nil && len(resp.DBInstances) == 1 {
 		out.CurrentPhase = *resp.DBInstances[0].DBInstanceStatus
 		out.Exists = true
-		if resp.DBInstances[0].Endpoint.Address != nil && *resp.DBInstances[0].Endpoint.Address != "" {
+		if resp.DBInstances[0].Endpoint != nil && *resp.DBInstances[0].Endpoint.Address != "" {
 			out.Endpoint = *resp.DBInstances[0].Endpoint.Address
 		}
 	}

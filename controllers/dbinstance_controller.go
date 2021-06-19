@@ -21,8 +21,11 @@ import (
 	"fmt"
 	"github.com/agill17/db-operator/pkg/factory"
 	"github.com/agill17/db-operator/pkg/utils"
+	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"sigs.k8s.io/controller-runtime/pkg/builder"
+	"sigs.k8s.io/controller-runtime/pkg/event"
+	"sigs.k8s.io/controller-runtime/pkg/predicate"
 	"time"
 
 	"github.com/go-logr/logr"
@@ -156,5 +159,8 @@ func (r *DBInstanceReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 func (r *DBInstanceReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&v1alpha1.DBInstance{}, builder.WithPredicates(r.dbInstancePredicates())).
+		Owns(&v1.Service{}, builder.WithPredicates(predicate.Funcs{
+			CreateFunc: func(event event.CreateEvent) bool { return false },
+		})).
 		Complete(r)
 }

@@ -1,7 +1,7 @@
 apiVersion: agill.apps.db-operator/v1alpha1
 kind: DBInstance
 metadata:
-  name: mysql-standalone
+  name: mysql-standalone-test
   namespace: default
 spec:
   region: us-east-1
