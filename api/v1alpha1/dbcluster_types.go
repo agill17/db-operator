@@ -17,6 +17,7 @@ limitations under the License.
 package v1alpha1
 
 import (
+	"fmt"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -336,4 +337,12 @@ type DBClusterList struct {
 
 func init() {
 	SchemeBuilder.Register(&DBCluster{}, &DBClusterList{})
+}
+
+func (in *DBCluster) GetDBClusterID() string {
+	clusterID := fmt.Sprintf("%s-%s", in.GetNamespace(), in.GetName())
+	if in.Spec.DBClusterIdentifierOverride != "" {
+		clusterID = in.Spec.DBClusterIdentifierOverride
+	}
+	return clusterID
 }

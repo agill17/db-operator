@@ -78,22 +78,32 @@ uninstall: manifests kustomize ## Uninstall CRDs from the K8s cluster specified 
 
 deploy: manifests kustomize ## Deploy controller to the K8s cluster specified in ~/.kube/config.
 	cd config/manager && $(KUSTOMIZE) edit set image controller=${IMG}
-	$(KUSTOMIZE) build config/default | kubectl apply -f -
+	$(KUSTOMIZE) build config/default
 
 undeploy: ## Undeploy controller from the K8s cluster specified in ~/.kube/config.
 	$(KUSTOMIZE) build config/default | kubectl delete -f -
 
-deploy-chart:
+install-cert-manager:
+	helm repo add jetstack https://charts.jetstack.io
+	helm repo update
+	kubectl create ns cert-manager || true
+	helm upgrade cert-manager jetstack/cert-manager --install -n=cert-manager --set installCRDs=true
+
+uninstall-cert-manager:
+	helm uninstall cert-manager -n cert-manager
+	kubectl delete ns cert-manager || true
+
+install-db-operator:
 	kubectl create ns db-operator || true
 	helm upgrade db-operator --namespace=db-operator -i db-operator --wait
 
-undeploy-chart:
+uninstall-db-operator:
+	helm uninstall db-operator --namespace=db-operator
 	kubectl delete ns db-operator || true
-	kubectl delete -f db-operator/crds/
 
 CONTROLLER_GEN = $(shell pwd)/bin/controller-gen
 controller-gen: ## Download controller-gen locally if necessary.
-	$(call go-get-tool,$(CONTROLLER_GEN),sigs.k8s.io/controller-tools/cmd/controller-gen@v0.4.1)
+	$(call go-get-tool,$(CONTROLLER_GEN),sigs.k8s.io/controller-tools/cmd/controller-gen@v0.5.0)
 
 KUSTOMIZE = $(shell pwd)/bin/kustomize
 kustomize: ## Download kustomize locally if necessary.

@@ -17,6 +17,7 @@ spec:
   dbName: test
   deletionProtection: false
   engine: mysql
+#  cloudwatchLogsExports: []
   engineVersion: 5.7.33
   passwordRef:
     passwordKey: password

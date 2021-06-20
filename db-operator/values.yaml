@@ -91,3 +91,12 @@ extraEnvs: []
 #      AWS_SECRET_ACCESS_KEY:
 #      OR
 #      AWS_ROLE_ARN: <assuming the underlying pod has permissions to assume this role>
+
+webhook:
+  certManager:
+    ## creates a self-signed issuer and a certificate in the same namespace as db-operator ( assumes cert manager is already installed )
+    generateCaFromCertManager: true
+  validating:
+    enabled: true
+  mutating:
+    enabled: false

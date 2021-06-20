@@ -4,7 +4,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.4.1
+    controller-gen.kubebuilder.io/version: v0.5.0
   creationTimestamp: null
   name: dbinstances.agill.apps.db-operator
 spec:
@@ -26,14 +26,10 @@ spec:
         description: DBInstance is the Schema for the dbinstances API
         properties:
           apiVersion:
-            description: 'APIVersion defines the versioned schema of this representation
-              of an object. Servers should convert recognized schemas to the latest
-              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            description: 'APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
             type: string
           kind:
-            description: 'Kind is a string value representing the REST resource this
-              object represents. Servers may infer this from the endpoint the client
-              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            description: 'Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
             type: string
           metadata:
             type: object
@@ -41,198 +37,64 @@ spec:
             description: DBInstanceSpec defines the desired state of DBInstance
             properties:
               allocatedStorage:
-                description: 'The amount of storage (in gibibytes) to allocate for
-                  the DB instance. Type: Integer Amazon Aurora Not applicable. Aurora
-                  cluster volumes automatically grow as the amount of data in your
-                  database increases, though you are only charged for the space that
-                  you use in an Aurora cluster volume. MySQL Constraints to the amount
-                  of storage for each storage type are the following:    * General
-                  Purpose (SSD) storage (gp2): Must be an integer from 20 to 65536.    *
-                  Provisioned IOPS storage (io1): Must be an integer from 100 to 65536.    *
-                  Magnetic storage (standard): Must be an integer from 5 to 3072.
-                  MariaDB Constraints to the amount of storage for each storage type
-                  are the following:    * General Purpose (SSD) storage (gp2): Must
-                  be an integer from 20 to 65536.    * Provisioned IOPS storage (io1):
-                  Must be an integer from 100 to 65536.    * Magnetic storage (standard):
-                  Must be an integer from 5 to 3072. PostgreSQL Constraints to the
-                  amount of storage for each storage type are the following:    *
-                  General Purpose (SSD) storage (gp2): Must be an integer from 20
-                  to 65536.    * Provisioned IOPS storage (io1): Must be an integer
-                  from 100 to 65536.    * Magnetic storage (standard): Must be an
-                  integer from 5 to 3072. Oracle Constraints to the amount of storage
-                  for each storage type are the following:    * General Purpose (SSD)
-                  storage (gp2): Must be an integer from 20 to 65536.    * Provisioned
-                  IOPS storage (io1): Must be an integer from 100 to 65536.    * Magnetic
-                  storage (standard): Must be an integer from 10 to 3072. SQL Server
-                  Constraints to the amount of storage for each storage type are the
-                  following:    * General Purpose (SSD) storage (gp2): Enterprise
-                  and Standard editions:    Must be an integer from 200 to 16384.
-                  Web and Express editions: Must be    an integer from 20 to 16384.    *
-                  Provisioned IOPS storage (io1): Enterprise and Standard editions:
-                  Must    be an integer from 200 to 16384. Web and Express editions:
-                  Must be an    integer from 100 to 16384.    * Magnetic storage (standard):
-                  Enterprise and Standard editions: Must    be an integer from 200
-                  to 1024. Web and Express editions: Must be an integer    from 20
-                  to 1024. required for non-aurora database instances'
+                description: 'The amount of storage (in gibibytes) to allocate for the DB instance. Type: Integer Amazon Aurora Not applicable. Aurora cluster volumes automatically grow as the amount of data in your database increases, though you are only charged for the space that you use in an Aurora cluster volume. MySQL Constraints to the amount of storage for each storage type are the following:    * General Purpose (SSD) storage (gp2): Must be an integer from 20 to 65536.    * Provisioned IOPS storage (io1): Must be an integer from 100 to 65536.    * Magnetic storage (standard): Must be an integer from 5 to 3072. MariaDB Constraints to the amount of storage for each storage type are the following:    * General Purpose (SSD) storage (gp2): Must be an integer from 20 to 65536.    * Provisioned IOPS storage (io1): Must be an integer from 100 to 65536.    * Magnetic storage (standard): Must be an integer from 5 to 3072. PostgreSQL Constraints to the amount of storage for each storage type are the following:    * General Purpose (SSD) storage (gp2): Must be an integer from 20 to 65536.    * Provisioned IOPS storage (io1): Must be an integer from 100 to 65536.    * Magnetic storage (standard): Must be an integer from 5 to 3072. Oracle Constraints to the amount of storage for each storage type are the following:    * General Purpose (SSD) storage (gp2): Must be an integer from 20 to 65536.    * Provisioned IOPS storage (io1): Must be an integer from 100 to 65536.    * Magnetic storage (standard): Must be an integer from 10 to 3072. SQL Server Constraints to the amount of storage for each storage type are the following:    * General Purpose (SSD) storage (gp2): Enterprise and Standard editions:    Must be an integer from 200 to 16384. Web and Express editions: Must be    an integer from 20 to 16384.    * Provisioned IOPS storage (io1): Enterprise and Standard editions: Must    be an integer from 200 to 16384. Web and Express editions: Must be an    integer from 100 to 16384.    * Magnetic storage (standard): Enterprise and Standard editions: Must    be an integer from 200 to 1024. Web and Express editions: Must be an integer    from 20 to 1024. required for non-aurora database instances'
                 format: int64
                 type: integer
               autoMinorVersionUpgrade:
-                description: A value that indicates whether minor engine upgrades
-                  are applied automatically to the DB instance during the maintenance
-                  window. By default, minor engine upgrades are applied automatically.
+                description: A value that indicates whether minor engine upgrades are applied automatically to the DB instance during the maintenance window. By default, minor engine upgrades are applied automatically.
                 type: boolean
               availabilityZone:
-                description: 'The Availability Zone (AZ) where the database will be
-                  created. For information on AWS Regions and Availability Zones,
-                  see Regions and Availability Zones (https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Concepts.RegionsAndAvailabilityZones.html).
-                  Default: A random, system-chosen Availability Zone in the endpoint''s
-                  AWS Region. Example: us-east-1d Constraint: The AvailabilityZone
-                  parameter can''t be specified if the DB instance is a Multi-AZ deployment.
-                  The specified Availability Zone must be in the same AWS Region as
-                  the current endpoint. If you''re creating a DB instance in an RDS
-                  on VMware environment, specify the identifier of the custom Availability
-                  Zone to create the DB instance in. For more information about RDS
-                  on VMware, see the RDS on VMware User Guide. (https://docs.aws.amazon.com/AmazonRDS/latest/RDSonVMwareUserGuide/rds-on-vmware.html)'
+                description: 'The Availability Zone (AZ) where the database will be created. For information on AWS Regions and Availability Zones, see Regions and Availability Zones (https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Concepts.RegionsAndAvailabilityZones.html). Default: A random, system-chosen Availability Zone in the endpoint''s AWS Region. Example: us-east-1d Constraint: The AvailabilityZone parameter can''t be specified if the DB instance is a Multi-AZ deployment. The specified Availability Zone must be in the same AWS Region as the current endpoint. If you''re creating a DB instance in an RDS on VMware environment, specify the identifier of the custom Availability Zone to create the DB instance in. For more information about RDS on VMware, see the RDS on VMware User Guide. (https://docs.aws.amazon.com/AmazonRDS/latest/RDSonVMwareUserGuide/rds-on-vmware.html)'
                 type: string
               backupRetentionPeriod:
-                description: 'The number of days for which automated backups are retained.
-                  Setting this parameter to a positive number enables backups. Setting
-                  this parameter to 0 disables automated backups. Amazon Aurora Not
-                  applicable. The retention period for automated backups is managed
-                  by the DB cluster. Default: 1 Constraints:    * Must be a value
-                  from 0 to 35    * Can''t be set to 0 if the DB instance is a source
-                  to read replicas'
+                description: 'The number of days for which automated backups are retained. Setting this parameter to a positive number enables backups. Setting this parameter to 0 disables automated backups. Amazon Aurora Not applicable. The retention period for automated backups is managed by the DB cluster. Default: 1 Constraints:    * Must be a value from 0 to 35    * Can''t be set to 0 if the DB instance is a source to read replicas'
                 format: int64
                 maximum: 35
                 minimum: 0
                 type: integer
               cloudwatchLogsExports:
-                description: "The list of log types that need to be enabled for exporting
-                  to CloudWatch Logs. The values in the list depend on the DB engine
-                  being used. For more information, see Publishing Database Logs to
-                  Amazon CloudWatch Logs (https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_LogAccess.html#USER_LogAccess.Procedural.UploadtoCloudWatch)
-                  in the Amazon Relational Database Service User Guide. Amazon Aurora
-                  Not applicable. CloudWatch Logs exports are managed by the DB cluster.
-                  \n MariaDB Possible values are audit, error, general, and slowquery.
-                  \n Microsoft SQL Server Possible values are agent and error. \n
-                  MySQL Possible values are audit, error, general, and slowquery.
-                  \n Oracle Possible values are alert, audit, listener, trace, and
-                  oemagent. \n PostgreSQL Possible values are postgresql and upgrade."
+                description: "The list of log types that need to be enabled for exporting to CloudWatch Logs. The values in the list depend on the DB engine being used. For more information, see Publishing Database Logs to Amazon CloudWatch Logs (https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_LogAccess.html#USER_LogAccess.Procedural.UploadtoCloudWatch) in the Amazon Relational Database Service User Guide. Amazon Aurora Not applicable. CloudWatch Logs exports are managed by the DB cluster. \n MariaDB Possible values are audit, error, general, and slowquery. \n Microsoft SQL Server Possible values are agent and error. \n MySQL Possible values are audit, error, general, and slowquery. \n Oracle Possible values are alert, audit, listener, trace, and oemagent. \n PostgreSQL Possible values are postgresql and upgrade."
                 items:
                   type: string
                 type: array
               copyTagsToSnapshot:
                 default: true
-                description: A value that indicates whether to copy tags from the
-                  DB instance to snapshots of the DB instance. By default, tags are
-                  not copied. Amazon Aurora Not applicable. Copying tags to snapshots
-                  is managed by the DB cluster. Setting this value for an Aurora DB
-                  instance has no effect on the DB cluster setting.
+                description: A value that indicates whether to copy tags from the DB instance to snapshots of the DB instance. By default, tags are not copied. Amazon Aurora Not applicable. Copying tags to snapshots is managed by the DB cluster. Setting this value for an Aurora DB instance has no effect on the DB cluster setting.
                 type: boolean
               dbClusterID:
                 description: Applicable for AWS aurora db clusters
                 type: string
               dbInstanceClass:
-                description: "The compute and memory capacity of the DB instance,
-                  for example, db.m4.large. Not all DB instance classes are available
-                  in all AWS Regions, or for all database engines. For the full list
-                  of DB instance classes, and availability for your engine, see DB
-                  Instance Class (https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Concepts.DBInstanceClass.html)
-                  in the Amazon RDS User Guide. \n DBInstanceClass is a required field"
+                description: "The compute and memory capacity of the DB instance, for example, db.m4.large. Not all DB instance classes are available in all AWS Regions, or for all database engines. For the full list of DB instance classes, and availability for your engine, see DB Instance Class (https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Concepts.DBInstanceClass.html) in the Amazon RDS User Guide. \n DBInstanceClass is a required field"
                 type: string
               dbInstanceIdentifierOverride:
-                description: 'The DB instance identifier. This parameter is stored
-                  as a lowercase string. Constraints:    * Must contain from 1 to
-                  63 letters, numbers, or hyphens.    * First character must be a
-                  letter.    * Can''t end with a hyphen or contain two consecutive
-                  hyphens. Example: mydbinstance DBInstanceIdentifier is an optional
-                  field, defaults to metadata.namespace-metadata.name'
+                description: 'The DB instance identifier. This parameter is stored as a lowercase string. Constraints:    * Must contain from 1 to 63 letters, numbers, or hyphens.    * First character must be a letter.    * Can''t end with a hyphen or contain two consecutive hyphens. Example: mydbinstance DBInstanceIdentifier is an optional field, defaults to metadata.namespace-metadata.name'
                 type: string
               dbName:
-                description: 'The meaning of this parameter differs according to the
-                  database engine you use. MySQL The name of the database to create
-                  when the DB instance is created. If this parameter isn''t specified,
-                  no database is created in the DB instance. Constraints:    * Must
-                  contain 1 to 64 letters or numbers.    * Must begin with a letter.
-                  Subsequent characters can be letters, underscores,    or digits
-                  (0-9).    * Can''t be a word reserved by the specified database
-                  engine MariaDB The name of the database to create when the DB instance
-                  is created. If this parameter isn''t specified, no database is created
-                  in the DB instance. Constraints:    * Must contain 1 to 64 letters
-                  or numbers.    * Must begin with a letter. Subsequent characters
-                  can be letters, underscores,    or digits (0-9).    * Can''t be
-                  a word reserved by the specified database engine PostgreSQL The
-                  name of the database to create when the DB instance is created.
-                  If this parameter isn''t specified, a database named postgres is
-                  created in the DB instance. Constraints:    * Must contain 1 to
-                  63 letters, numbers, or underscores.    * Must begin with a letter.
-                  Subsequent characters can be letters, underscores,    or digits
-                  (0-9).    * Can''t be a word reserved by the specified database
-                  engine Oracle The Oracle System ID (SID) of the created DB instance.
-                  If you specify null, the default value ORCL is used. You can''t
-                  specify the string NULL, or any other reserved word, for DBName.
-                  Default: ORCL Constraints:    * Can''t be longer than 8 characters
-                  SQL Server Not applicable. Must be null. Amazon Aurora MySQL The
-                  name of the database to create when the primary DB instance of the
-                  Aurora MySQL DB cluster is created. If this parameter isn''t specified
-                  for an Aurora MySQL DB cluster, no database is created in the DB
-                  cluster. Constraints:    * It must contain 1 to 64 alphanumeric
-                  characters.    * It can''t be a word reserved by the database engine.
-                  Amazon Aurora PostgreSQL The name of the database to create when
-                  the primary DB instance of the Aurora PostgreSQL DB cluster is created.
-                  If this parameter isn''t specified for an Aurora PostgreSQL DB cluster,
-                  a database named postgres is created in the DB cluster. Constraints:    *
-                  It must contain 1 to 63 alphanumeric characters.    * It must begin
-                  with a letter or an underscore. Subsequent characters    can be
-                  letters, underscores, or digits (0 to 9).    * It can''t be a word
-                  reserved by the database engine.'
+                description: 'The meaning of this parameter differs according to the database engine you use. MySQL The name of the database to create when the DB instance is created. If this parameter isn''t specified, no database is created in the DB instance. Constraints:    * Must contain 1 to 64 letters or numbers.    * Must begin with a letter. Subsequent characters can be letters, underscores,    or digits (0-9).    * Can''t be a word reserved by the specified database engine MariaDB The name of the database to create when the DB instance is created. If this parameter isn''t specified, no database is created in the DB instance. Constraints:    * Must contain 1 to 64 letters or numbers.    * Must begin with a letter. Subsequent characters can be letters, underscores,    or digits (0-9).    * Can''t be a word reserved by the specified database engine PostgreSQL The name of the database to create when the DB instance is created. If this parameter isn''t specified, a database named postgres is created in the DB instance. Constraints:    * Must contain 1 to 63 letters, numbers, or underscores.    * Must begin with a letter. Subsequent characters can be letters, underscores,    or digits (0-9).    * Can''t be a word reserved by the specified database engine Oracle The Oracle System ID (SID) of the created DB instance. If you specify null, the default value ORCL is used. You can''t specify the string NULL, or any other reserved word, for DBName. Default: ORCL Constraints:    * Can''t be longer than 8 characters SQL Server Not applicable. Must be null. Amazon Aurora MySQL The name of the database to create when the primary DB instance of the Aurora MySQL DB cluster is created. If this parameter isn''t specified for an Aurora MySQL DB cluster, no database is created in the DB cluster. Constraints:    * It must contain 1 to 64 alphanumeric characters.    * It can''t be a word reserved by the database engine. Amazon Aurora PostgreSQL The name of the database to create when the primary DB instance of the Aurora PostgreSQL DB cluster is created. If this parameter isn''t specified for an Aurora PostgreSQL DB cluster, a database named postgres is created in the DB cluster. Constraints:    * It must contain 1 to 63 alphanumeric characters.    * It must begin with a letter or an underscore. Subsequent characters    can be letters, underscores, or digits (0 to 9).    * It can''t be a word reserved by the database engine.'
                 type: string
               dbParameterGroupName:
-                description: 'The name of the DB parameter group to associate with
-                  this DB instance. If you do not specify a value, then the default
-                  DB parameter group for the specified DB engine and version is used.
-                  Constraints:    * Must be 1 to 255 letters, numbers, or hyphens.    *
-                  First character must be a letter    * Can''t end with a hyphen or
-                  contain two consecutive hyphens'
+                description: 'The name of the DB parameter group to associate with this DB instance. If you do not specify a value, then the default DB parameter group for the specified DB engine and version is used. Constraints:    * Must be 1 to 255 letters, numbers, or hyphens.    * First character must be a letter    * Can''t end with a hyphen or contain two consecutive hyphens'
                 maxLength: 255
                 minLength: 1
                 type: string
               dbSecurityGroups:
-                description: 'A list of DB security groups to associate with this
-                  DB instance. Default: The default DB security group for the database
-                  engine.'
+                description: 'A list of DB security groups to associate with this DB instance. Default: The default DB security group for the database engine.'
                 items:
                   type: string
                 type: array
               dbSubnetGroupName:
-                description: A DB subnet group to associate with this DB instance.
-                  If there is no DB subnet group, then it is a non-VPC DB instance.
+                description: A DB subnet group to associate with this DB instance. If there is no DB subnet group, then it is a non-VPC DB instance.
                 type: string
               deletionProtection:
-                description: A value that indicates whether the DB instance has deletion
-                  protection enabled. The database can't be deleted when deletion
-                  protection is enabled. By default, deletion protection is disabled.
-                  For more information, see Deleting a DB Instance (https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_DeleteInstance.html).
-                  Amazon Aurora Not applicable. You can enable or disable deletion
-                  protection for the DB cluster. For more information, see CreateDBCluster.
-                  DB instances in a DB cluster can be deleted even when deletion protection
-                  is enabled for the DB cluster.
+                description: A value that indicates whether the DB instance has deletion protection enabled. The database can't be deleted when deletion protection is enabled. By default, deletion protection is disabled. For more information, see Deleting a DB Instance (https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_DeleteInstance.html). Amazon Aurora Not applicable. You can enable or disable deletion protection for the DB cluster. For more information, see CreateDBCluster. DB instances in a DB cluster can be deleted even when deletion protection is enabled for the DB cluster.
                 type: boolean
               enablePerformanceInsights:
                 default: false
-                description: A value that indicates whether to enable Performance
-                  Insights for the DB instance. For more information, see Using Amazon
-                  Performance Insights (https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_PerfInsights.html)
-                  in the Amazon Relational Database Service User Guide.
+                description: A value that indicates whether to enable Performance Insights for the DB instance. For more information, see Using Amazon Performance Insights (https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_PerfInsights.html) in the Amazon Relational Database Service User Guide.
                 type: boolean
               engine:
-                description: 'The name of the database engine to be used for this
-                  instance. Not every database engine is available for every AWS Region.
-                  Valid Values:    * aurora (for MySQL 5.6-compatible Aurora)    *
-                  aurora-mysql (for MySQL 5.7-compatible Aurora)    * aurora-postgresql    *
-                  mariadb    * mysql    * oracle-ee    * oracle-se2    * oracle-se1    *
-                  oracle-se    * postgres    * sqlserver-ee    * sqlserver-se    *
-                  sqlserver-ex    * sqlserver-web Engine is a required field'
+                description: 'The name of the database engine to be used for this instance. Not every database engine is available for every AWS Region. Valid Values:    * aurora (for MySQL 5.6-compatible Aurora)    * aurora-mysql (for MySQL 5.7-compatible Aurora)    * aurora-postgresql    * mariadb    * mysql    * oracle-ee    * oracle-se2    * oracle-se1    * oracle-se    * postgres    * sqlserver-ee    * sqlserver-se    * sqlserver-ex    * sqlserver-web Engine is a required field'
                 enum:
                 - aurora
                 - aurora-mysql
@@ -249,77 +111,23 @@ spec:
                 - sqlserver-web
                 type: string
               engineVersion:
-                description: "The version number of the database engine to use. For
-                  a list of valid engine versions, use the DescribeDBEngineVersions
-                  action. The following are the database engines and links to information
-                  about the major and minor versions that are available with Amazon
-                  RDS. Not every database engine is available for every AWS Region.
-                  \n Amazon Aurora Not applicable. The version number of the database
-                  engine to be used by the DB instance is managed by the DB cluster.
-                  \n MariaDB See MariaDB on Amazon RDS Versions (https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/CHAP_MariaDB.html#MariaDB.Concepts.VersionMgmt)
-                  in the Amazon RDS User Guide. \n Microsoft SQL Server See Microsoft
-                  SQL Server Versions on Amazon RDS (https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/CHAP_SQLServer.html#SQLServer.Concepts.General.VersionSupport)
-                  in the Amazon RDS User Guide. \n MySQL See MySQL on Amazon RDS Versions
-                  (https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/CHAP_MySQL.html#MySQL.Concepts.VersionMgmt)
-                  in the Amazon RDS User Guide. \n Oracle See Oracle Database Engine
-                  Release Notes (https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Appendix.Oracle.PatchComposition.html)
-                  in the Amazon RDS User Guide. \n PostgreSQL See Amazon RDS for PostgreSQL
-                  versions and extensions (https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/CHAP_PostgreSQL.html#PostgreSQL.Concepts)
-                  in the Amazon RDS User Guide. required for non-aurora dbs"
+                description: "The version number of the database engine to use. For a list of valid engine versions, use the DescribeDBEngineVersions action. The following are the database engines and links to information about the major and minor versions that are available with Amazon RDS. Not every database engine is available for every AWS Region. \n Amazon Aurora Not applicable. The version number of the database engine to be used by the DB instance is managed by the DB cluster. \n MariaDB See MariaDB on Amazon RDS Versions (https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/CHAP_MariaDB.html#MariaDB.Concepts.VersionMgmt) in the Amazon RDS User Guide. \n Microsoft SQL Server See Microsoft SQL Server Versions on Amazon RDS (https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/CHAP_SQLServer.html#SQLServer.Concepts.General.VersionSupport) in the Amazon RDS User Guide. \n MySQL See MySQL on Amazon RDS Versions (https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/CHAP_MySQL.html#MySQL.Concepts.VersionMgmt) in the Amazon RDS User Guide. \n Oracle See Oracle Database Engine Release Notes (https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Appendix.Oracle.PatchComposition.html) in the Amazon RDS User Guide. \n PostgreSQL See Amazon RDS for PostgreSQL versions and extensions (https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/CHAP_PostgreSQL.html#PostgreSQL.Concepts) in the Amazon RDS User Guide. required for non-aurora dbs"
                 type: string
               iops:
-                description: 'The amount of Provisioned IOPS (input/output operations
-                  per second) to be initially allocated for the DB instance. For information
-                  about valid Iops values, see Amazon RDS Provisioned IOPS Storage
-                  to Improve Performance (https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/CHAP_Storage.html#USER_PIOPS)
-                  in the Amazon RDS User Guide. Constraints: For MariaDB, MySQL, Oracle,
-                  and PostgreSQL DB instances, must be a multiple between .5 and 50
-                  of the storage amount for the DB instance. For SQL Server DB instances,
-                  must be a multiple between 1 and 50 of the storage amount for the
-                  DB instance.'
+                description: 'The amount of Provisioned IOPS (input/output operations per second) to be initially allocated for the DB instance. For information about valid Iops values, see Amazon RDS Provisioned IOPS Storage to Improve Performance (https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/CHAP_Storage.html#USER_PIOPS) in the Amazon RDS User Guide. Constraints: For MariaDB, MySQL, Oracle, and PostgreSQL DB instances, must be a multiple between .5 and 50 of the storage amount for the DB instance. For SQL Server DB instances, must be a multiple between 1 and 50 of the storage amount for the DB instance.'
                 format: int64
                 type: integer
               kmsKeyID:
-                description: "The AWS KMS key identifier for an encrypted DB instance.
-                  The AWS KMS key identifier is the key ARN, key ID, alias ARN, or
-                  alias name for the AWS KMS customer master key (CMK). To use a CMK
-                  in a different AWS account, specify the key ARN or alias ARN. \n
-                  Amazon Aurora Not applicable. The AWS KMS key identifier is managed
-                  by the DB cluster. For more information, see CreateDBCluster. \n
-                  If StorageEncrypted is enabled, and you do not specify a value for
-                  the KmsKeyId parameter, then Amazon RDS uses your default CMK. There
-                  is a default CMK for your AWS account. Your AWS account has a different
-                  default CMK for each AWS Region."
+                description: "The AWS KMS key identifier for an encrypted DB instance. The AWS KMS key identifier is the key ARN, key ID, alias ARN, or alias name for the AWS KMS customer master key (CMK). To use a CMK in a different AWS account, specify the key ARN or alias ARN. \n Amazon Aurora Not applicable. The AWS KMS key identifier is managed by the DB cluster. For more information, see CreateDBCluster. \n If StorageEncrypted is enabled, and you do not specify a value for the KmsKeyId parameter, then Amazon RDS uses your default CMK. There is a default CMK for your AWS account. Your AWS account has a different default CMK for each AWS Region."
                 type: string
               licenseModel:
-                description: 'License model information for this DB instance. Valid
-                  values: license-included | bring-your-own-license | general-public-license'
+                description: 'License model information for this DB instance. Valid values: license-included | bring-your-own-license | general-public-license'
                 type: string
               masterUsername:
-                description: "The name for the master user. Amazon Aurora Not applicable.
-                  The name for the master user is managed by the DB cluster. \n MariaDB
-                  Constraints:    * Required for MariaDB.    * Must be 1 to 16 letters
-                  or numbers.    * Can't be a reserved word for the chosen database
-                  engine. \n Microsoft SQL Server Constraints:    * Required for SQL
-                  Server.    * Must be 1 to 128 letters or numbers.    * The first
-                  character must be a letter.    * Can't be a reserved word for the
-                  chosen database engine. \n MySQL Constraints:    * Required for
-                  MySQL.    * Must be 1 to 16 letters or numbers.    * First character
-                  must be a letter.    * Can't be a reserved word for the chosen database
-                  engine. \n Oracle Constraints:    * Required for Oracle.    * Must
-                  be 1 to 30 letters or numbers.    * First character must be a letter.
-                  \   * Can't be a reserved word for the chosen database engine. \n
-                  PostgreSQL Constraints:    * Required for PostgreSQL.    * Must
-                  be 1 to 63 letters or numbers.    * First character must be a letter.
-                  \   * Can't be a reserved word for the chosen database engine. required
-                  for non-aurora dbs"
+                description: "The name for the master user. Amazon Aurora Not applicable. The name for the master user is managed by the DB cluster. \n MariaDB Constraints:    * Required for MariaDB.    * Must be 1 to 16 letters or numbers.    * Can't be a reserved word for the chosen database engine. \n Microsoft SQL Server Constraints:    * Required for SQL Server.    * Must be 1 to 128 letters or numbers.    * The first character must be a letter.    * Can't be a reserved word for the chosen database engine. \n MySQL Constraints:    * Required for MySQL.    * Must be 1 to 16 letters or numbers.    * First character must be a letter.    * Can't be a reserved word for the chosen database engine. \n Oracle Constraints:    * Required for Oracle.    * Must be 1 to 30 letters or numbers.    * First character must be a letter.    * Can't be a reserved word for the chosen database engine. \n PostgreSQL Constraints:    * Required for PostgreSQL.    * Must be 1 to 63 letters or numbers.    * First character must be a letter.    * Can't be a reserved word for the chosen database engine. required for non-aurora dbs"
                 type: string
               monitoringInterval:
-                description: 'The interval, in seconds, between points when Enhanced
-                  Monitoring metrics are collected for the DB instance. To disable
-                  collecting Enhanced Monitoring metrics, specify 0. The default is
-                  0. If MonitoringRoleArn is specified, then you must also set MonitoringInterval
-                  to a value other than 0. Valid Values: 0, 1, 5, 10, 15, 30, 60'
+                description: 'The interval, in seconds, between points when Enhanced Monitoring metrics are collected for the DB instance. To disable collecting Enhanced Monitoring metrics, specify 0. The default is 0. If MonitoringRoleArn is specified, then you must also set MonitoringInterval to a value other than 0. Valid Values: 0, 1, 5, 10, 15, 30, 60'
                 enum:
                 - 0
                 - 1
@@ -331,45 +139,24 @@ spec:
                 format: int64
                 type: integer
               monitoringRoleArn:
-                description: The ARN for the IAM role that permits RDS to send enhanced
-                  monitoring metrics to Amazon CloudWatch Logs. For example, arn:aws:iam:123456789012:role/emaccess.
-                  For information on creating a monitoring role, go to Setting Up
-                  and Enabling Enhanced Monitoring (https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_Monitoring.OS.html#USER_Monitoring.OS.Enabling)
-                  in the Amazon RDS User Guide. If MonitoringInterval is set to a
-                  value other than 0, then you must supply a MonitoringRoleArn value.
+                description: The ARN for the IAM role that permits RDS to send enhanced monitoring metrics to Amazon CloudWatch Logs. For example, arn:aws:iam:123456789012:role/emaccess. For information on creating a monitoring role, go to Setting Up and Enabling Enhanced Monitoring (https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_Monitoring.OS.html#USER_Monitoring.OS.Enabling) in the Amazon RDS User Guide. If MonitoringInterval is set to a value other than 0, then you must supply a MonitoringRoleArn value.
                 type: string
               multiAZ:
-                description: A value that indicates whether the DB instance is a Multi-AZ
-                  deployment. You can't set the AvailabilityZone parameter if the
-                  DB instance is a Multi-AZ deployment.
+                description: A value that indicates whether the DB instance is a Multi-AZ deployment. You can't set the AvailabilityZone parameter if the DB instance is a Multi-AZ deployment.
                 type: boolean
               optionGroupName:
-                description: A value that indicates that the DB instance should be
-                  associated with the specified option group. Permanent options, such
-                  as the TDE option for Oracle Advanced Security TDE, can't be removed
-                  from an option group. Also, that option group can't be removed from
-                  a DB instance once it is associated with a DB instance
+                description: A value that indicates that the DB instance should be associated with the specified option group. Permanent options, such as the TDE option for Oracle Advanced Security TDE, can't be removed from an option group. Also, that option group can't be removed from a DB instance once it is associated with a DB instance
                 type: string
               passwordRef:
-                description: "The password for the master user. The password can include
-                  any printable ASCII character except \"/\", \"\"\", or \"@\". \n
-                  Amazon Aurora Not applicable. The password for the master user is
-                  managed by the DB cluster. \n MariaDB Constraints: Must contain
-                  from 8 to 41 characters. \n Microsoft SQL Server Constraints: Must
-                  contain from 8 to 128 characters. \n MySQL Constraints: Must contain
-                  from 8 to 41 characters. \n Oracle Constraints: Must contain from
-                  8 to 30 characters. \n PostgreSQL Constraints: Must contain from
-                  8 to 128 characters. required for non-aurora dbs"
+                description: "The password for the master user. The password can include any printable ASCII character except \"/\", \"\"\", or \"@\". \n Amazon Aurora Not applicable. The password for the master user is managed by the DB cluster. \n MariaDB Constraints: Must contain from 8 to 41 characters. \n Microsoft SQL Server Constraints: Must contain from 8 to 128 characters. \n MySQL Constraints: Must contain from 8 to 41 characters. \n Oracle Constraints: Must contain from 8 to 30 characters. \n PostgreSQL Constraints: Must contain from 8 to 128 characters. required for non-aurora dbs"
                 properties:
                   passwordKey:
                     type: string
                   secretRef:
-                    description: LocalObjectReference contains enough information
-                      to let you locate the referenced object inside the same namespace.
+                    description: LocalObjectReference contains enough information to let you locate the referenced object inside the same namespace.
                     properties:
                       name:
-                        description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
-                          TODO: Add other useful fields. apiVersion, kind, uid?'
+                        description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names TODO: Add other useful fields. apiVersion, kind, uid?'
                         type: string
                     type: object
                 required:
@@ -377,37 +164,22 @@ spec:
                 - secretRef
                 type: object
               performanceInsightsKmsKeyID:
-                description: The AWS KMS key identifier for encryption of Performance
-                  Insights data. The AWS KMS key identifier is the key ARN, key ID,
-                  alias ARN, or alias name for the AWS KMS customer master key (CMK).
-                  If you do not specify a value for PerformanceInsightsKMSKeyId, then
-                  Amazon RDS uses your default CMK. There is a default CMK for your
-                  AWS account. Your AWS account has a different default CMK for each
-                  AWS Region.
+                description: The AWS KMS key identifier for encryption of Performance Insights data. The AWS KMS key identifier is the key ARN, key ID, alias ARN, or alias name for the AWS KMS customer master key (CMK). If you do not specify a value for PerformanceInsightsKMSKeyId, then Amazon RDS uses your default CMK. There is a default CMK for your AWS account. Your AWS account has a different default CMK for each AWS Region.
                 type: string
               port:
-                description: "The port number on which the database accepts connections.
-                  MySQL Default: 3306 Valid values: 1150-65535 Type: Integer \n MariaDB
-                  Default: 3306 Valid values: 1150-65535 Type: Integer \n PostgreSQL
-                  Default: 5432 Valid values: 1150-65535 Type: Integer \n Oracle Default:
-                  1521 Valid values: 1150-65535 \n SQL Server Default: 1433 Valid
-                  values: 1150-65535 except 1234, 1434, 3260, 3343, 3389, 47001, and
-                  49152-49156. \n Amazon Aurora Default: 3306 Valid values: 1150-65535"
+                description: "The port number on which the database accepts connections. MySQL Default: 3306 Valid values: 1150-65535 Type: Integer \n MariaDB Default: 3306 Valid values: 1150-65535 Type: Integer \n PostgreSQL Default: 5432 Valid values: 1150-65535 Type: Integer \n Oracle Default: 1521 Valid values: 1150-65535 \n SQL Server Default: 1433 Valid values: 1150-65535 except 1234, 1434, 3260, 3343, 3389, 47001, and 49152-49156. \n Amazon Aurora Default: 3306 Valid values: 1150-65535"
                 format: int64
                 type: integer
               provider:
                 properties:
                   secretRef:
-                    description: SecretReference represents a Secret Reference. It
-                      has enough information to retrieve secret in any namespace
+                    description: SecretReference represents a Secret Reference. It has enough information to retrieve secret in any namespace
                     properties:
                       name:
-                        description: Name is unique within a namespace to reference
-                          a secret resource.
+                        description: Name is unique within a namespace to reference a secret resource.
                         type: string
                       namespace:
-                        description: Namespace defines the space within which the
-                          secret name must be unique.
+                        description: Namespace defines the space within which the secret name must be unique.
                         type: string
                     type: object
                   type:
@@ -429,15 +201,10 @@ spec:
                 default: true
                 type: boolean
               storageEncrypted:
-                description: A value that indicates whether the DB instance is encrypted.
-                  By default, it isn't encrypted. Amazon Aurora Not applicable. The
-                  encryption for DB instances is managed by the DB cluster.
+                description: A value that indicates whether the DB instance is encrypted. By default, it isn't encrypted. Amazon Aurora Not applicable. The encryption for DB instances is managed by the DB cluster.
                 type: boolean
               storageType:
-                description: 'Specifies the storage type to be associated with the
-                  DB instance. Valid values: standard | gp2 | io1 If you specify io1,
-                  you must also include a value for the Iops parameter. Default: io1
-                  if the Iops parameter is specified, otherwise gp2'
+                description: 'Specifies the storage type to be associated with the DB instance. Valid values: standard | gp2 | io1 If you specify io1, you must also include a value for the Iops parameter. Default: io1 if the Iops parameter is specified, otherwise gp2'
                 enum:
                 - standard
                 - gp2
@@ -449,14 +216,10 @@ spec:
                 description: Tags to assign to the DB instance.
                 type: object
               timezone:
-                description: The time zone of the DB instance. The time zone parameter
-                  is currently supported only by Microsoft SQL Server (https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/CHAP_SQLServer.html#SQLServer.Concepts.General.TimeZone).
+                description: The time zone of the DB instance. The time zone parameter is currently supported only by Microsoft SQL Server (https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/CHAP_SQLServer.html#SQLServer.Concepts.General.TimeZone).
                 type: string
               vpcSecurityGroupIDs:
-                description: 'A list of Amazon EC2 VPC security groups to associate
-                  with this DB instance. Amazon Aurora Not applicable. The associated
-                  list of EC2 VPC security groups is managed by the DB cluster. Default:
-                  The default EC2 VPC security group for the DB subnet group''s VPC.'
+                description: 'A list of Amazon EC2 VPC security groups to associate with this DB instance. Amazon Aurora Not applicable. The associated list of EC2 VPC security groups is managed by the DB cluster. Default: The default EC2 VPC security group for the DB subnet group''s VPC.'
                 items:
                   type: string
                 type: array

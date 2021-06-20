@@ -17,6 +17,7 @@ limitations under the License.
 package v1alpha1
 
 import (
+	"fmt"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -32,7 +33,7 @@ type DBInstanceSpec struct {
 	SkipFinalSnapshot bool `json:"skipFinalSnapshot,omitempty"`
 	// Applicable for AWS aurora db clusters
 	// +optional
-	DBClusterID string `json:"dbClusterID,omitempty"`
+	DBClusterID string `json:"dbClusterID,omitempty" required-for-engines:"aurora,aurora-mysql,aurora-postgresql"`
 	// The amount of storage (in gibibytes) to allocate for the DB instance.
 	// Type: Integer
 	// Amazon Aurora
@@ -71,7 +72,7 @@ type DBInstanceSpec struct {
 	//    be an integer from 200 to 1024. Web and Express editions: Must be an integer
 	//    from 20 to 1024.
 	// required for non-aurora database instances
-	AllocatedStorage int64 `json:"allocatedStorage,omitempty"`
+	AllocatedStorage int64 `json:"allocatedStorage,omitempty" required-for-engines:"mariadb,mysql,oracle-ee,oracle-se2,oracle-se1,postgres,sqlserver-ee,sqlserver-se,sqlserver-ex,sqlserver-web"`
 
 	// A value that indicates whether minor engine upgrades are applied automatically
 	// to the DB instance during the maintenance window. By default, minor engine
@@ -109,7 +110,7 @@ type DBInstanceSpec struct {
 	// +optional
 	// +kubebuilder:validation:Minimum=0
 	// +kubebuilder:validation:Maximum=35
-	BackupRetentionPeriod int64 `json:"backupRetentionPeriod,omitempty"`
+	BackupRetentionPeriod int64 `json:"backupRetentionPeriod,omitempty" applicable-for-engines:"mariadb,mysql,oracle-ee,oracle-se2,oracle-se1,postgres,sqlserver-ee,sqlserver-se,sqlserver-ex,sqlserver-web"`
 
 	// A value that indicates whether to copy tags from the DB instance to snapshots
 	// of the DB instance. By default, tags are not copied.
@@ -118,7 +119,7 @@ type DBInstanceSpec struct {
 	// this value for an Aurora DB instance has no effect on the DB cluster setting.
 	// +optional
 	// +kubebuilder:default=true
-	CopyTagsToSnapshot bool `json:"copyTagsToSnapshot,omitempty"`
+	CopyTagsToSnapshot bool `json:"copyTagsToSnapshot,omitempty" applicable-for-engines:"mariadb,mysql,oracle-ee,oracle-se2,oracle-se1,postgres,sqlserver-ee,sqlserver-se,sqlserver-ex,sqlserver-web"`
 
 	// The compute and memory capacity of the DB instance, for example, db.m4.large.
 	// Not all DB instance classes are available in all AWS Regions, or for all
@@ -193,7 +194,7 @@ type DBInstanceSpec struct {
 	//    can be letters, underscores, or digits (0 to 9).
 	//    * It can't be a word reserved by the database engine.
 	// +optional
-	DBName string `json:"dbName,omitempty"`
+	DBName string `json:"dbName,omitempty" applicable-for-engines:"aurora,aurora-mysql,aurora-postgresql,mariadb,mysql,oracle-ee,oracle-se2,oracle-se1,postgres"`
 
 	// The name of the DB parameter group to associate with this DB instance. If
 	// you do not specify a value, then the default DB parameter group for the specified
@@ -226,7 +227,7 @@ type DBInstanceSpec struct {
 	// cluster can be deleted even when deletion protection is enabled for the DB
 	// cluster.
 	// +optional
-	DeletionProtection bool `json:"deletionProtection,omitempty"`
+	DeletionProtection bool `json:"deletionProtection,omitempty" applicable-for-engines:"mariadb,mysql,oracle-ee,oracle-se2,oracle-se1,postgres,sqlserver-ee,sqlserver-se,sqlserver-ex,sqlserver-web"`
 
 	// The list of log types that need to be enabled for exporting to CloudWatch
 	// Logs. The values in the list depend on the DB engine being used. For more
@@ -250,7 +251,7 @@ type DBInstanceSpec struct {
 	// PostgreSQL
 	// Possible values are postgresql and upgrade.
 	// +optional
-	CloudwatchLogsExports []string `json:"cloudwatchLogsExports"`
+	CloudwatchLogsExports []string `json:"cloudwatchLogsExports" applicable-for-engines:"mariadb,mysql,oracle-ee,oracle-se2,oracle-se1,postgres,sqlserver-ee,sqlserver-se,sqlserver-ex,sqlserver-web"`
 
 	// A value that indicates whether to enable Performance Insights for the DB
 	// instance.
@@ -312,7 +313,7 @@ type DBInstanceSpec struct {
 	// in the Amazon RDS User Guide.
 	// required for non-aurora dbs
 	// +optional
-	EngineVersion string `json:"engineVersion,omitempty"`
+	EngineVersion string `json:"engineVersion,omitempty" required-for-engines:"mariadb,mysql,oracle-ee,oracle-se2,oracle-se1,postgres,sqlserver-ee,sqlserver-se,sqlserver-ex,sqlserver-web"`
 
 	// The amount of Provisioned IOPS (input/output operations per second) to be
 	// initially allocated for the DB instance. For information about valid Iops
@@ -339,7 +340,7 @@ type DBInstanceSpec struct {
 	// for your AWS account. Your AWS account has a different default CMK for each
 	// AWS Region.
 	// +optional
-	KmsKeyId string `json:"kmsKeyID,omitempty"`
+	KmsKeyId string `json:"kmsKeyID,omitempty" applicable-for-engines:"mariadb,mysql,oracle-ee,oracle-se2,oracle-se1,postgres,sqlserver-ee,sqlserver-se,sqlserver-ex,sqlserver-web"`
 
 	// License model information for this DB instance.
 	// Valid values: license-included | bring-your-own-license | general-public-license
@@ -368,7 +369,7 @@ type DBInstanceSpec struct {
 	// Constraints: Must contain from 8 to 128 characters.
 	// required for non-aurora dbs
 	// +optional
-	PasswordRef PasswordRef `json:"passwordRef,omitempty"`
+	PasswordRef PasswordRef `json:"passwordRef,omitempty" required-for-engines:"mariadb,mysql,oracle-ee,oracle-se2,oracle-se1,postgres,sqlserver-ee,sqlserver-se,sqlserver-ex,sqlserver-web"`
 
 	// The name for the master user.
 	// Amazon Aurora
@@ -408,7 +409,7 @@ type DBInstanceSpec struct {
 	//    * First character must be a letter.
 	//    * Can't be a reserved word for the chosen database engine.
 	// required for non-aurora dbs
-	MasterUsername string `json:"masterUsername,omitempty"`
+	MasterUsername string `json:"masterUsername,omitempty" required-for-engines:"mariadb,mysql,oracle-ee,oracle-se2,oracle-se1,postgres,sqlserver-ee,sqlserver-se,sqlserver-ex,sqlserver-web"`
 
 	// The interval, in seconds, between points when Enhanced Monitoring metrics
 	// are collected for the DB instance. To disable collecting Enhanced Monitoring
@@ -493,13 +494,14 @@ type DBInstanceSpec struct {
 	// Amazon Aurora
 	// Not applicable. The encryption for DB instances is managed by the DB cluster.
 	// +optional
-	StorageEncrypted bool `json:"storageEncrypted,omitempty"`
+	StorageEncrypted bool `json:"storageEncrypted,omitempty" applicable-for-engines:"mariadb,mysql,oracle-ee,oracle-se2,oracle-se1,postgres,sqlserver-ee,sqlserver-se,sqlserver-ex,sqlserver-web"`
 
 	// Specifies the storage type to be associated with the DB instance.
 	// Valid values: standard | gp2 | io1
 	// If you specify io1, you must also include a value for the Iops parameter.
 	// Default: io1 if the Iops parameter is specified, otherwise gp2
 	// +kubebuilder:validation:Enum=standard;gp2;io1
+	// +optional
 	StorageType string `json:"storageType,omitempty"`
 
 	// Tags to assign to the DB instance.
@@ -509,7 +511,7 @@ type DBInstanceSpec struct {
 	// The time zone of the DB instance. The time zone parameter is currently supported
 	// only by Microsoft SQL Server (https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/CHAP_SQLServer.html#SQLServer.Concepts.General.TimeZone).
 	// +optional
-	Timezone string `json:"timezone,omitempty"`
+	Timezone string `json:"timezone,omitempty" applicable-for-engines:"sqlserver-ee,sqlserver-se,sqlserver-ex,sqlserver-web"`
 
 	// A list of Amazon EC2 VPC security groups to associate with this DB instance.
 	// Amazon Aurora
@@ -517,7 +519,7 @@ type DBInstanceSpec struct {
 	// by the DB cluster.
 	// Default: The default EC2 VPC security group for the DB subnet group's VPC.
 	// +optional
-	VpcSecurityGroupIds []string `json:"vpcSecurityGroupIDs,omitempty"`
+	VpcSecurityGroupIds []string `json:"vpcSecurityGroupIDs,omitempty" applicable-for-engines:"mariadb,mysql,oracle-ee,oracle-se2,oracle-se1,postgres,sqlserver-ee,sqlserver-se,sqlserver-ex,sqlserver-web"`
 }
 
 // DBInstanceStatus defines the observed state of DBInstance
@@ -549,4 +551,12 @@ type DBInstanceList struct {
 
 func init() {
 	SchemeBuilder.Register(&DBInstance{}, &DBInstanceList{})
+}
+
+func (in *DBInstance) GetDBInstanceID() string {
+	out := fmt.Sprintf("%s-%s", in.GetNamespace(), in.GetName())
+	if in.Spec.DBInstanceIdentifierOverride != "" {
+		out = in.Spec.DBInstanceIdentifierOverride
+	}
+	return out
 }

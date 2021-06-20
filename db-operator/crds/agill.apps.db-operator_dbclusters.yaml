@@ -4,7 +4,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.4.1
+    controller-gen.kubebuilder.io/version: v0.5.0
   creationTimestamp: null
   name: dbclusters.agill.apps.db-operator
 spec:
@@ -26,14 +26,10 @@ spec:
         description: DBCluster is the Schema for the dbclusters API
         properties:
           apiVersion:
-            description: 'APIVersion defines the versioned schema of this representation
-              of an object. Servers should convert recognized schemas to the latest
-              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            description: 'APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
             type: string
           kind:
-            description: 'Kind is a string value representing the REST resource this
-              object represents. Servers may infer this from the endpoint the client
-              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            description: 'Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
             type: string
           metadata:
             type: object
@@ -41,127 +37,60 @@ spec:
             description: DBClusterSpec defines the desired state of DBCluster
             properties:
               availabilityZones:
-                description: A list of Availability Zones (AZs) where instances in
-                  the DB cluster can be created. For information on AWS Regions and
-                  Availability Zones, see Choosing the Regions and Availability Zones
-                  (https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/Concepts.RegionsAndAvailabilityZones.html)
-                  in the Amazon Aurora User Guide.
+                description: A list of Availability Zones (AZs) where instances in the DB cluster can be created. For information on AWS Regions and Availability Zones, see Choosing the Regions and Availability Zones (https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/Concepts.RegionsAndAvailabilityZones.html) in the Amazon Aurora User Guide.
                 items:
                   type: string
                 type: array
               backupRetentionPeriod:
                 default: 1
-                description: "The number of days for which automated backups are retained.
-                  \n For AWS, Default: 1 \n Constraints:    * Must be a value from
-                  1 to 35"
+                description: "The number of days for which automated backups are retained. \n For AWS, Default: 1 \n Constraints:    * Must be a value from 1 to 35"
                 format: int64
                 maximum: 35
                 minimum: 1
                 type: integer
               copyTagsToSnapshot:
-                description: A value that indicates whether to copy all tags from
-                  the DB cluster to snapshots of the DB cluster. The default is not
-                  to copy them.
+                description: A value that indicates whether to copy all tags from the DB cluster to snapshots of the DB cluster. The default is not to copy them.
                 type: boolean
               databaseName:
-                description: The name for your database of up to 64 alphanumeric characters.
-                  If you do not provide a name, Amazon RDS doesn't create a database
-                  in the DB cluster you are creating.
+                description: The name for your database of up to 64 alphanumeric characters. If you do not provide a name, Amazon RDS doesn't create a database in the DB cluster you are creating.
                 maxLength: 63
                 minLength: 1
                 type: string
               dbClusterIdentifierOverride:
-                description: 'The DB cluster identifier. This parameter is stored
-                  as a lowercase string. Constraints:    * Must contain from 1 to
-                  63 letters, numbers, or hyphens.    * First character must be a
-                  letter.    * Can''t end with a hyphen or contain two consecutive
-                  hyphens. Example: my-cluster1 DBClusterIdentifierOverride is a optional
-                  field, defaults to .metadata.name'
+                description: 'The DB cluster identifier. This parameter is stored as a lowercase string. Constraints:    * Must contain from 1 to 63 letters, numbers, or hyphens.    * First character must be a letter.    * Can''t end with a hyphen or contain two consecutive hyphens. Example: my-cluster1 DBClusterIdentifierOverride is a optional field, defaults to .metadata.name'
                 type: string
               dbClusterParameterGroupName:
-                description: 'The name of the DB cluster parameter group to associate
-                  with this DB cluster. If you do not specify a value, then the default
-                  DB cluster parameter group for the specified DB engine and version
-                  is used. Constraints:    * If supplied, must match the name of an
-                  existing DB cluster parameter    group.'
+                description: 'The name of the DB cluster parameter group to associate with this DB cluster. If you do not specify a value, then the default DB cluster parameter group for the specified DB engine and version is used. Constraints:    * If supplied, must match the name of an existing DB cluster parameter    group.'
                 type: string
               dbSubnetGroupName:
-                description: "A DB subnet group to associate with this DB cluster.
-                  \n Constraints: Must match the name of an existing DBSubnetGroup.
-                  Must not be default. \n Example: mySubnetgroup"
+                description: "A DB subnet group to associate with this DB cluster. \n Constraints: Must match the name of an existing DBSubnetGroup. Must not be default. \n Example: mySubnetgroup"
                 type: string
               deletionProtection:
-                description: A value that indicates whether the DB cluster has deletion
-                  protection enabled. The database can't be deleted when deletion
-                  protection is enabled. By default, deletion protection is disabled.
+                description: A value that indicates whether the DB cluster has deletion protection enabled. The database can't be deleted when deletion protection is enabled. By default, deletion protection is disabled.
                 type: boolean
               destinationRegion:
-                description: DestinationRegion is used for presigning the request
-                  to a given region.
+                description: DestinationRegion is used for presigning the request to a given region.
                 type: string
               enableCouldWatchLogExport:
-                description: "The list of log types that need to be enabled for exporting
-                  to CloudWatch Logs. The values in the list depend on the DB engine
-                  being used. For more information, see Publishing Database Logs to
-                  Amazon CloudWatch Logs (https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/USER_LogAccess.html#USER_LogAccess.Procedural.UploadtoCloudWatch)
-                  in the Amazon Aurora User Guide. \n Aurora MySQL \n Possible values
-                  are audit, error, general, and slowquery. \n Aurora PostgreSQL \n
-                  Possible value is postgresql. TODO: add AnyOf by hand since controller-gen
-                  does not have this baked in: https://github.com/kubernetes-sigs/controller-tools/issues/461"
+                description: "The list of log types that need to be enabled for exporting to CloudWatch Logs. The values in the list depend on the DB engine being used. For more information, see Publishing Database Logs to Amazon CloudWatch Logs (https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/USER_LogAccess.html#USER_LogAccess.Procedural.UploadtoCloudWatch) in the Amazon Aurora User Guide. \n Aurora MySQL \n Possible values are audit, error, general, and slowquery. \n Aurora PostgreSQL \n Possible value is postgresql. TODO: add AnyOf by hand since controller-gen does not have this baked in: https://github.com/kubernetes-sigs/controller-tools/issues/461"
                 items:
                   type: string
                 type: array
               enableGlobalWriteForwarding:
-                description: "A value that indicates whether to enable this DB cluster
-                  to forward write operations to the primary cluster of an Aurora
-                  global database (GlobalCluster). By default, write operations are
-                  not allowed on Aurora DB clusters that are secondary clusters in
-                  an Aurora global database. \n You can set this value only on Aurora
-                  DB clusters that are members of an Aurora global database. With
-                  this parameter enabled, a secondary cluster can forward writes to
-                  the current primary cluster and the resulting changes are replicated
-                  back to this cluster. For the primary DB cluster of an Aurora global
-                  database, this value is used immediately if the primary is demoted
-                  by the FailoverGlobalCluster API operation, but it does nothing
-                  until then."
+                description: "A value that indicates whether to enable this DB cluster to forward write operations to the primary cluster of an Aurora global database (GlobalCluster). By default, write operations are not allowed on Aurora DB clusters that are secondary clusters in an Aurora global database. \n You can set this value only on Aurora DB clusters that are members of an Aurora global database. With this parameter enabled, a secondary cluster can forward writes to the current primary cluster and the resulting changes are replicated back to this cluster. For the primary DB cluster of an Aurora global database, this value is used immediately if the primary is demoted by the FailoverGlobalCluster API operation, but it does nothing until then."
                 type: boolean
               enableHttpEndpoint:
-                description: "A value that indicates whether to enable the HTTP endpoint
-                  for an Aurora Serverless DB cluster. By default, the HTTP endpoint
-                  is disabled. \n When enabled, the HTTP endpoint provides a connectionless
-                  web service API for running SQL queries on the Aurora Serverless
-                  DB cluster. You can also query your database from inside the RDS
-                  console with the query editor. \n For more information, see Using
-                  the Data API for Aurora Serverless (https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/data-api.html)
-                  in the Amazon Aurora User Guide."
+                description: "A value that indicates whether to enable the HTTP endpoint for an Aurora Serverless DB cluster. By default, the HTTP endpoint is disabled. \n When enabled, the HTTP endpoint provides a connectionless web service API for running SQL queries on the Aurora Serverless DB cluster. You can also query your database from inside the RDS console with the query editor. \n For more information, see Using the Data API for Aurora Serverless (https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/data-api.html) in the Amazon Aurora User Guide."
                 type: boolean
               engine:
-                description: "The name of the database engine to be used for this
-                  DB cluster. \n Valid Values: aurora (for MySQL 5.6-compatible Aurora),
-                  aurora-mysql (for MySQL 5.7-compatible Aurora), and aurora-postgresql
-                  \n Engine is a required field"
+                description: "The name of the database engine to be used for this DB cluster. \n Valid Values: aurora (for MySQL 5.6-compatible Aurora), aurora-mysql (for MySQL 5.7-compatible Aurora), and aurora-postgresql \n Engine is a required field"
                 enum:
                 - aurora
                 - aurora-mysql
                 - aurora-postgresql
                 type: string
               engineMode:
-                description: "The DB engine mode of the DB cluster, either provisioned,
-                  serverless, parallelquery, global, or multimaster. \n The parallelquery
-                  engine mode isn't required for Aurora MySQL version 1.23 and higher
-                  1.x versions, and version 2.09 and higher 2.x versions. \n The global
-                  engine mode isn't required for Aurora MySQL version 1.22 and higher
-                  1.x versions, and global engine mode isn't required for any 2.x
-                  versions. \n The multimaster engine mode only applies for DB clusters
-                  created with Aurora MySQL version 5.6.10a. \n For Aurora PostgreSQL,
-                  the global engine mode isn't required, and both the parallelquery
-                  and the multimaster engine modes currently aren't supported. \n
-                  Limitations and requirements apply to some DB engine modes. For
-                  more information, see the following sections in the Amazon Aurora
-                  User Guide: \n    * Limitations of Aurora Serverless (https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/aurora-serverless.html#aurora-serverless.limitations)
-                  \n    * Limitations of Parallel Query (https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/aurora-mysql-parallel-query.html#aurora-mysql-parallel-query-limitations)
-                  \n    * Limitations of Aurora Global Databases (https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/aurora-global-database.html#aurora-global-database.limitations)
-                  \n    * Limitations of Multi-Master Clusters (https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/aurora-multi-master.html#aurora-multi-master-limitations)"
+                description: "The DB engine mode of the DB cluster, either provisioned, serverless, parallelquery, global, or multimaster. \n The parallelquery engine mode isn't required for Aurora MySQL version 1.23 and higher 1.x versions, and version 2.09 and higher 2.x versions. \n The global engine mode isn't required for Aurora MySQL version 1.22 and higher 1.x versions, and global engine mode isn't required for any 2.x versions. \n The multimaster engine mode only applies for DB clusters created with Aurora MySQL version 5.6.10a. \n For Aurora PostgreSQL, the global engine mode isn't required, and both the parallelquery and the multimaster engine modes currently aren't supported. \n Limitations and requirements apply to some DB engine modes. For more information, see the following sections in the Amazon Aurora User Guide: \n    * Limitations of Aurora Serverless (https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/aurora-serverless.html#aurora-serverless.limitations) \n    * Limitations of Parallel Query (https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/aurora-mysql-parallel-query.html#aurora-mysql-parallel-query-limitations) \n    * Limitations of Aurora Global Databases (https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/aurora-global-database.html#aurora-global-database.limitations) \n    * Limitations of Multi-Master Clusters (https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/aurora-multi-master.html#aurora-multi-master-limitations)"
                 enum:
                 - provisioned
                 - serverless
@@ -170,48 +99,16 @@ spec:
                 - multimaster
                 type: string
               engineVersion:
-                description: "The version number of the database engine to use. \n
-                  To list all of the available engine versions for aurora (for MySQL
-                  5.6-compatible Aurora), use the following command: \n aws rds describe-db-engine-versions
-                  --engine aurora --query \"DBEngineVersions[].EngineVersion\" \n
-                  To list all of the available engine versions for aurora-mysql (for
-                  MySQL 5.7-compatible Aurora), use the following command: \n aws
-                  rds describe-db-engine-versions --engine aurora-mysql --query \"DBEngineVersions[].EngineVersion\"
-                  \n To list all of the available engine versions for aurora-postgresql,
-                  use the following command: \n aws rds describe-db-engine-versions
-                  --engine aurora-postgresql --query \"DBEngineVersions[].EngineVersion\"
-                  \n Aurora MySQL \n Example: 5.6.10a, 5.6.mysql_aurora.1.19.2, 5.7.12,
-                  5.7.mysql_aurora.2.04.5 \n Aurora PostgreSQL \n Example: 9.6.3,
-                  10.7"
+                description: "The version number of the database engine to use. \n To list all of the available engine versions for aurora (for MySQL 5.6-compatible Aurora), use the following command: \n aws rds describe-db-engine-versions --engine aurora --query \"DBEngineVersions[].EngineVersion\" \n To list all of the available engine versions for aurora-mysql (for MySQL 5.7-compatible Aurora), use the following command: \n aws rds describe-db-engine-versions --engine aurora-mysql --query \"DBEngineVersions[].EngineVersion\" \n To list all of the available engine versions for aurora-postgresql, use the following command: \n aws rds describe-db-engine-versions --engine aurora-postgresql --query \"DBEngineVersions[].EngineVersion\" \n Aurora MySQL \n Example: 5.6.10a, 5.6.mysql_aurora.1.19.2, 5.7.12, 5.7.mysql_aurora.2.04.5 \n Aurora PostgreSQL \n Example: 9.6.3, 10.7"
                 type: string
               kmsKeyID:
-                description: "The AWS KMS key identifier for an encrypted DB cluster.
-                  \n The AWS KMS key identifier is the key ARN, key ID, alias ARN,
-                  or alias name for the AWS KMS customer master key (CMK). To use
-                  a CMK in a different AWS account, specify the key ARN or alias ARN.
-                  \n When a CMK isn't specified in KmsKeyId: \n    * If ReplicationSourceIdentifier
-                  identifies an encrypted source, then    Amazon RDS will use the
-                  CMK used to encrypt the source. Otherwise, Amazon    RDS will use
-                  your default CMK. \n    * If the StorageEncrypted parameter is enabled
-                  and ReplicationSourceIdentifier    isn't specified, then Amazon
-                  RDS will use your default CMK. \n There is a default CMK for your
-                  AWS account. Your AWS account has a different default CMK for each
-                  AWS Region. \n If you create a read replica of an encrypted DB cluster
-                  in another AWS Region, you must set KmsKeyId to a AWS KMS key identifier
-                  that is valid in the destination AWS Region. This CMK is used to
-                  encrypt the read replica in that AWS Region."
+                description: "The AWS KMS key identifier for an encrypted DB cluster. \n The AWS KMS key identifier is the key ARN, key ID, alias ARN, or alias name for the AWS KMS customer master key (CMK). To use a CMK in a different AWS account, specify the key ARN or alias ARN. \n When a CMK isn't specified in KmsKeyId: \n    * If ReplicationSourceIdentifier identifies an encrypted source, then    Amazon RDS will use the CMK used to encrypt the source. Otherwise, Amazon    RDS will use your default CMK. \n    * If the StorageEncrypted parameter is enabled and ReplicationSourceIdentifier    isn't specified, then Amazon RDS will use your default CMK. \n There is a default CMK for your AWS account. Your AWS account has a different default CMK for each AWS Region. \n If you create a read replica of an encrypted DB cluster in another AWS Region, you must set KmsKeyId to a AWS KMS key identifier that is valid in the destination AWS Region. This CMK is used to encrypt the read replica in that AWS Region."
                 type: string
               masterUsername:
-                description: 'The name of the master user for the DB cluster. Constraints:    *
-                  Must be 1 to 16 letters or numbers.    * First character must be
-                  a letter.    * Can''t be a reserved word for the chosen database
-                  engine.'
+                description: 'The name of the master user for the DB cluster. Constraints:    * Must be 1 to 16 letters or numbers.    * First character must be a letter.    * Can''t be a reserved word for the chosen database engine.'
                 type: string
               optionGroupName:
-                description: A value that indicates that the DB cluster should be
-                  associated with the specified option group. Permanent options can't
-                  be removed from an option group. The option group can't be removed
-                  from a DB cluster once it is associated with a DB cluster.
+                description: A value that indicates that the DB cluster should be associated with the specified option group. Permanent options can't be removed from an option group. The option group can't be removed from a DB cluster once it is associated with a DB cluster.
                 type: string
               passwordRef:
                 description: Specifies the secret to use
@@ -219,12 +116,10 @@ spec:
                   passwordKey:
                     type: string
                   secretRef:
-                    description: LocalObjectReference contains enough information
-                      to let you locate the referenced object inside the same namespace.
+                    description: LocalObjectReference contains enough information to let you locate the referenced object inside the same namespace.
                     properties:
                       name:
-                        description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
-                          TODO: Add other useful fields. apiVersion, kind, uid?'
+                        description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names TODO: Add other useful fields. apiVersion, kind, uid?'
                         type: string
                     type: object
                 required:
@@ -232,47 +127,27 @@ spec:
                 - secretRef
                 type: object
               port:
-                description: 'The port number on which the instances in the DB cluster
-                  accept connections. Default: 3306 if engine is set as aurora or
-                  5432 if set to aurora-postgresql.'
+                description: 'The port number on which the instances in the DB cluster accept connections. Default: 3306 if engine is set as aurora or 5432 if set to aurora-postgresql.'
                 format: int64
                 type: integer
               preferredBackupWindow:
                 default: 23:00-23:30
-                description: "The daily time range during which automated backups
-                  are created if automated backups are enabled using the BackupRetentionPeriod
-                  parameter. \n The default is a 30-minute window selected at random
-                  from an 8-hour block of time for each AWS Region. To view the time
-                  blocks available, see Backup window (https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/Aurora.Managing.Backups.html#Aurora.Managing.Backups.BackupWindow)
-                  in the Amazon Aurora User Guide. \n Constraints: \n    * Must be
-                  in the format hh24:mi-hh24:mi. \n    * Must be in Universal Coordinated
-                  Time (UTC). \n    * Must not conflict with the preferred maintenance
-                  window. \n    * Must be at least 30 minutes."
+                description: "The daily time range during which automated backups are created if automated backups are enabled using the BackupRetentionPeriod parameter. \n The default is a 30-minute window selected at random from an 8-hour block of time for each AWS Region. To view the time blocks available, see Backup window (https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/Aurora.Managing.Backups.html#Aurora.Managing.Backups.BackupWindow) in the Amazon Aurora User Guide. \n Constraints: \n    * Must be in the format hh24:mi-hh24:mi. \n    * Must be in Universal Coordinated Time (UTC). \n    * Must not conflict with the preferred maintenance window. \n    * Must be at least 30 minutes."
                 type: string
               preferredMaintenanceWindow:
                 default: sun:06:00-sun:06:30
-                description: "The weekly time range during which system maintenance
-                  can occur, in Universal Coordinated Time (UTC). \n Format: ddd:hh24:mi-ddd:hh24:mi
-                  \n The default is a 30-minute window selected at random from an
-                  8-hour block of time for each AWS Region, occurring on a random
-                  day of the week. To see the time blocks available, see Adjusting
-                  the Preferred DB Cluster Maintenance Window (https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/USER_UpgradeDBInstance.Maintenance.html#AdjustingTheMaintenanceWindow.Aurora)
-                  in the Amazon Aurora User Guide. \n Valid Days: Mon, Tue, Wed, Thu,
-                  Fri, Sat, Sun. \n Constraints: Minimum 30-minute window."
+                description: "The weekly time range during which system maintenance can occur, in Universal Coordinated Time (UTC). \n Format: ddd:hh24:mi-ddd:hh24:mi \n The default is a 30-minute window selected at random from an 8-hour block of time for each AWS Region, occurring on a random day of the week. To see the time blocks available, see Adjusting the Preferred DB Cluster Maintenance Window (https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/USER_UpgradeDBInstance.Maintenance.html#AdjustingTheMaintenanceWindow.Aurora) in the Amazon Aurora User Guide. \n Valid Days: Mon, Tue, Wed, Thu, Fri, Sat, Sun. \n Constraints: Minimum 30-minute window."
                 type: string
               provider:
                 properties:
                   secretRef:
-                    description: SecretReference represents a Secret Reference. It
-                      has enough information to retrieve secret in any namespace
+                    description: SecretReference represents a Secret Reference. It has enough information to retrieve secret in any namespace
                     properties:
                       name:
-                        description: Name is unique within a namespace to reference
-                          a secret resource.
+                        description: Name is unique within a namespace to reference a secret resource.
                         type: string
                       namespace:
-                        description: Namespace defines the space within which the
-                          secret name must be unique.
+                        description: Namespace defines the space within which the secret name must be unique.
                         type: string
                     type: object
                   type:
@@ -288,8 +163,7 @@ spec:
               region:
                 type: string
               replicationSourceIdentifier:
-                description: The Amazon Resource Name (ARN) of the source DB instance
-                  or DB cluster if this DB cluster is created as a read replica.
+                description: The Amazon Resource Name (ARN) of the source DB instance or DB cluster if this DB cluster is created as a read replica.
                 type: string
               skipFinalSnapshot:
                 default: true
@@ -303,8 +177,7 @@ spec:
                 description: Tags to assign to the DB cluster.
                 type: object
               vpcSecurityGroupIds:
-                description: A list of EC2 VPC security groups to associate with this
-                  DB cluster.
+                description: A list of EC2 VPC security groups to associate with this DB cluster.
                 items:
                   type: string
                 type: array

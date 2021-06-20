@@ -11,5 +11,10 @@ spec:
       targetPort: http
       protocol: TCP
       name: http
+      {{- if and (or (.Values.webhook.validating.enabled) (.Values.webhook.mutating.enabled)) (.Values.webhook.certManager.generateCaFromCertManager) }}
+    - name: https
+      port: 443
+      targetPort: 9443
+    {{- end }}
   selector:
     {{- include "db-operator.selectorLabels" . | nindent 4 }}
