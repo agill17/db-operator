@@ -20,9 +20,9 @@ type DBCluster interface {
 type DBInstance interface {
 	CreateDBInstance(input *v1alpha1.DBInstance, password string) error
 	DeleteDBInstance(input *v1alpha1.DBInstance) error
-	ModifyDBInstance(input *v1alpha1.DBInstance, password string) error
+	ModifyDBInstance(modifyIn interface{}) error
 	DBInstanceExists(input *v1alpha1.DBInstance) (*v1alpha1.DBStatus, error)
-	IsDBInstanceUpToDate(input *v1alpha1.DBInstance) (bool, error)
+	IsDBInstanceUpToDate(input *v1alpha1.DBInstance) (bool, interface{}, error)
 }
 
 type CloudDB interface {

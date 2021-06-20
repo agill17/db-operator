@@ -31,7 +31,7 @@ func (i InternalAwsClients) DeleteDBCluster(dbCluster *v1alpha1.DBCluster) error
 
 	if _, errDeleting := i.rdsClient.DeleteDBCluster(deleteDBClusterInput(dbCluster)); errDeleting != nil {
 		if awsErr, isAwsErr := errDeleting.(awserr.Error); isAwsErr {
-			switch awsErr.Error() {
+			switch awsErr.Code() {
 			case rds.ErrCodeDBClusterNotFoundFault:
 				i.logger.Info(fmt.Sprintf("%v - does not exist, nothing to delete.", namespacedName))
 				return nil
@@ -63,10 +63,8 @@ func (i InternalAwsClients) ModifyDBCluster(modifyIn interface{}) error {
 		return ErrInvalidTypeWasPassedIn{Message: errMsg}
 	}
 	rdsModifyIn.ApplyImmediately = aws.Bool(true)
-	if _, errUpdating := i.rdsClient.ModifyDBCluster(rdsModifyIn); errUpdating != nil {
-		return errUpdating
-	}
-	return nil
+	_, errUpdating := i.rdsClient.ModifyDBCluster(rdsModifyIn)
+	return errUpdating
 }
 
 func (i InternalAwsClients) DBClusterExists(dbClusterID string) (*v1alpha1.DBStatus, error) {

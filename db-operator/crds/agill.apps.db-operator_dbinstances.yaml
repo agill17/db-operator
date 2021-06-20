@@ -233,6 +233,20 @@ spec:
                   mariadb    * mysql    * oracle-ee    * oracle-se2    * oracle-se1    *
                   oracle-se    * postgres    * sqlserver-ee    * sqlserver-se    *
                   sqlserver-ex    * sqlserver-web Engine is a required field'
+                enum:
+                - aurora
+                - aurora-mysql
+                - aurora-postgresql
+                - mariadb
+                - mysql
+                - oracle-ee
+                - oracle-se2
+                - oracle-se1
+                - postgres
+                - sqlserver-ee
+                - sqlserver-se
+                - sqlserver-ex
+                - sqlserver-web
                 type: string
               engineVersion:
                 description: "The version number of the database engine to use. For

@@ -278,6 +278,7 @@ type DBInstanceSpec struct {
 	//    * sqlserver-ex
 	//    * sqlserver-web
 	// Engine is a required field
+	// +kubebuilder:validation:Enum=aurora;aurora-mysql;aurora-postgresql;mariadb;mysql;oracle-ee;oracle-se2;oracle-se1;postgres;sqlserver-ee;sqlserver-se;sqlserver-ex;sqlserver-web
 	Engine string `json:"engine,required"`
 
 	// The version number of the database engine to use.

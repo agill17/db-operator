@@ -129,6 +129,7 @@ func (r *DBInstanceReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 		insPass = secretValue
 	}
 
+	// create
 	if !instanceStatus.Exists {
 		errCreating := r.CloudDBInterface.CreateDBInstance(cr, insPass)
 		if errCreating != nil {
@@ -138,7 +139,20 @@ func (r *DBInstanceReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 		return ctrl.Result{Requeue: true, RequeueAfter: 10 * time.Second}, utils.UpdateStatusPhase(v1alpha1.Creating, cr, r.Client)
 	}
 
-	// check if update needed and modify as needed
+	// update
+	isUpToDate, modifyIn, errChecking := r.CloudDBInterface.IsDBInstanceUpToDate(cr)
+	if errChecking != nil {
+		r.Log.Error(errChecking, "Failed to check if dbinstance is up to date")
+		return ctrl.Result{}, errChecking
+	}
+	if !isUpToDate {
+		errUpdating := r.CloudDBInterface.ModifyDBInstance(modifyIn)
+		if errUpdating != nil {
+			return ctrl.Result{}, errUpdating
+		}
+		r.Log.Info(fmt.Sprintf("%s - is not up to date, updating now.", namespacedName))
+		return ctrl.Result{Requeue: true, RequeueAfter: 5 * time.Second}, utils.UpdateStatusPhase(v1alpha1.Updating, cr, r.Client)
+	}
 
 	// create external name service
 	svcResult, svcName, errReconcilingSvc := createOrUpdateExternalNameSvc(cr, instanceStatus.Endpoint, r.Client, r.Scheme)
