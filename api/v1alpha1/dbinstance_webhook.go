@@ -73,8 +73,8 @@ func (r *DBInstance) validateRequiredFieldsPerEngine() error {
 	namespacedName := fmt.Sprintf("%s/%s", r.GetNamespace(), r.GetName())
 	spec := r.Spec
 	var errs []string
-	enginesWithRequiredFields := getRequiredFieldsPerEngine(spec)
-	requiredFields, ok := enginesWithRequiredFields[spec.Engine]
+	requiredFieldsForEngine := getRequiredFieldsPerEngine(spec)
+	requiredFields, ok := requiredFieldsForEngine[spec.Engine]
 	if !ok {
 		dbinstancelog.Info(fmt.Sprintf("%s - '%s' engine does not have any required fields", namespacedName, spec.Engine))
 		return nil
