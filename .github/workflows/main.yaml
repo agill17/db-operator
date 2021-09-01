@@ -13,12 +13,10 @@ jobs:
       uses: fjogeleit/yaml-update-action@master
       with:
         valueFile: 'db-operator/Chart.yaml'
-        propertyPath: 'version'
+        propertyPath: 'dependencies[0].version'
         value: 0.1.1
         branch: master
         message: 'Update chart.yaml'
-        commitChange: false
-        updateFile: true
       run: pwd
     - name: Update values
       uses: fjogeleit/yaml-update-action@master
