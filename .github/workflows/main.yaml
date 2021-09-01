@@ -1,0 +1,26 @@
+name: main
+
+on: [push, pull_request]
+
+jobs:
+  - uses: actions/checkout@v2
+  - name: Update Chart version
+    runs-on: ubuntu-latest
+    uses: fjogeleit/yaml-update-action@master
+    with:
+      valueFile: 'db-operator/Chart.yaml'
+      propertyPath: 'version'
+      value: 1.0.1
+      branch: master
+      commitChange: false
+      updateFile: true
+  - name: Update values
+    runs-on: ubuntu-latest
+    uses: fjogeleit/yaml-update-action@master
+    with:
+      valueFile: 'db-operator/values.yaml'
+      propertyPath: 'image.tag'
+      value: foo
+      branch: master
+      commitChange: true
+      updateFile: true
