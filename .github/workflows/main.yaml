@@ -17,7 +17,6 @@ jobs:
         value: 0.1.1
         branch: master
         message: 'Update chart.yaml'
-      run: pwd
     - name: Update values
       uses: fjogeleit/yaml-update-action@master
       with:
