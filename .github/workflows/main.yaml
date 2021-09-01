@@ -1,8 +1,11 @@
 name: main
 
-on: [push, pull_request]
+on: 
+  push: 
+  pull_request:
 
 jobs:
+  update-yaml-test:
   - uses: actions/checkout@v2
   - name: Update Chart version
     runs-on: ubuntu-latest
