@@ -6,6 +6,7 @@ on:
 
 jobs:
   update-yaml-test:
+  steps:
   - uses: actions/checkout@v2
   - name: Update Chart version
     runs-on: ubuntu-latest
