@@ -6,10 +6,10 @@ on:
 
 jobs:
   update-yaml-test:
+    runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
     - name: Update Chart version
-      runs-on: ubuntu-latest
       uses: fjogeleit/yaml-update-action@master
       with:
         valueFile: 'db-operator/Chart.yaml'
