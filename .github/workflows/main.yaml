@@ -14,14 +14,16 @@ jobs:
       with:
         valueFile: 'db-operator/Chart.yaml'
         propertyPath: 'version'
-        value: 0.1.0
+        value: 0.1.1
         branch: master
-        message: 'Update chart.yaml' 
+        message: 'Update chart.yaml'
+        commitChange: false
+        updateFile: true
     - name: Update values
       uses: fjogeleit/yaml-update-action@master
       with:
         valueFile: 'db-operator/values.yaml'
         propertyPath: 'image.tag'
-        value: fooooooo
+        value: 0.1.1
         branch: master
         message: 'Update values.yaml' 
