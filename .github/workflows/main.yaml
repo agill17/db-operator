@@ -14,9 +14,8 @@ jobs:
       with:
         valueFile: 'db-operator/Chart.yaml'
         propertyPath: 'version'
-        value: 1.0.1
-        branch: chnage/master
-        createPR: 'false'
+        value: 0.1.0
+        branch: master
         message: 'Update chart.yaml' 
     - name: Update values
       uses: fjogeleit/yaml-update-action@master
@@ -24,7 +23,5 @@ jobs:
         valueFile: 'db-operator/values.yaml'
         propertyPath: 'image.tag'
         value: fooooooo
-        branch: chnage/master
-        targetBranch: master
-        createPR: 'true'
+        branch: master
         message: 'Update values.yaml' 
