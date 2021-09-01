@@ -22,6 +22,6 @@ jobs:
       with:
         valueFile: 'db-operator/values.yaml'
         propertyPath: 'image.tag'
-        value: 0.1.2-foo
+        value: 0.1.2-foo-bar
         branch: master
         message: 'Update values.yaml' 
