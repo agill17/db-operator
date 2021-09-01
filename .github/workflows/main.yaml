@@ -19,6 +19,7 @@ jobs:
         message: 'Update chart.yaml'
         commitChange: false
         updateFile: true
+      run: pwd
     - name: Update values
       uses: fjogeleit/yaml-update-action@master
       with:
