@@ -19,7 +19,6 @@ jobs:
         commitChange: false
         updateFile: true
     - name: Update values
-      runs-on: ubuntu-latest
       uses: fjogeleit/yaml-update-action@master
       with:
         valueFile: 'db-operator/values.yaml'
