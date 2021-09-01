@@ -2,7 +2,7 @@ replicaCount: 1
 image:
   repository: agill17/db-operator
   pullPolicy: Always
-  tag: foo
+  tag: fooooooo
 imagePullSecrets: []
 nameOverride: ''
 fullnameOverride: ''
