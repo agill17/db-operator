@@ -15,16 +15,16 @@ jobs:
           repository: agill17/s3-operator
           path: target
           token: ${{ secrets.PAT }}
-          ref: master-old 
+          ref: master 
     - name: update chart version
       uses: fjogeleit/yaml-update-action@master
       with:
-        valueFile: 'chart/s3-operator/Chart.yaml'
+        valueFile: 's3-operator/Chart.yaml'
         propertyPath: 'dependencies.0.version'
-        value: 2.0.0
+        value: 2.0.1
         repository: agill17/s3-operator
         branch: testbranch
-        targetBranch: master-old
+        targetBranch: master
         createPR: true
         message: 'Update chart Version'
         token: ${{ secrets.PAT }}
