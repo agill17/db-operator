@@ -13,7 +13,7 @@ jobs:
       name: checkout target repo
       with:
           repository: agill17/s3-operator
-          path: s3-operator
+          path: target
           token: ${{ secrets.PAT }}
           ref: master-old 
     - name: update chart version
@@ -28,4 +28,4 @@ jobs:
         createPR: true
         message: 'Update chart Version'
         token: ${{ secrets.PAT }}
-        workDir: s3-operator
+        workDir: target
