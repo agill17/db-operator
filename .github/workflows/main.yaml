@@ -5,23 +5,27 @@ on:
   pull_request:
 
 jobs:
-  update-yaml-test:
+  update-yaml-in-another-repo:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
-    - name: Update Chart version
+    - uses: actions/checkout@v2
+      name: checkout target repo
+      with:
+          repository: agill17/s3-operator
+          path: s3-operator
+          token: ${{ secrets.PAT }}
+          ref: master-old 
+    - name: update chart version
       uses: fjogeleit/yaml-update-action@master
       with:
-        valueFile: 'db-operator/Chart.yaml'
+        valueFile: 'chart/s3-operator/Chart.yaml'
         propertyPath: 'dependencies.0.version'
-        value: 0.1.1
-        branch: master
-        message: 'Update chart.yaml'
-    - name: Update values
-      uses: fjogeleit/yaml-update-action@master
-      with:
-        valueFile: 'db-operator/values.yaml'
-        propertyPath: 'image.tag'
-        value: 0.1.2-foo-bar
-        branch: master
-        message: 'Update values.yaml' 
+        value: 2.0.0
+        repository: agill17/s3-operator
+        branch: feature/dep-update
+        targetBranch: master-old
+        createPR: true
+        message: 'Update chart Version'
+        token: ${{ secrets.PAT }}
+        workDir: s3-operator
