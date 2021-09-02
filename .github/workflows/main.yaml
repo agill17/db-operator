@@ -23,7 +23,7 @@ jobs:
         propertyPath: 'dependencies.0.version'
         value: 2.0.0
         repository: agill17/s3-operator
-        # branch: feature/dep-update
+        branch: testbranch
         targetBranch: master-old
         createPR: true
         message: 'Update chart Version'
