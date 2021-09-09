@@ -17,7 +17,7 @@ jobs:
           token: ${{ secrets.PAT }}
           ref: master 
     - name: update chart version
-      uses: fjogeleit/yaml-update-action@master
+      uses: agill17/yaml-update-action@master
       with:
         valueFile: 's3-operator/Chart.yaml'
         propertyPath: 'dependencies.0.version'
