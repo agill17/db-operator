@@ -21,9 +21,9 @@ jobs:
       with:
         valueFile: 's3-operator/Chart.yaml'
         propertyPath: 'dependencies.0.version'
-        value: 2.0.1
+        value: "2.0.2"
         repository: agill17/s3-operator
         branch: master
-        message: 'this commit should not be made'
+        message: 'this commit should be made'
         token: ${{ secrets.PAT }}
         workDir: target
