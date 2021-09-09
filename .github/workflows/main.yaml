@@ -23,9 +23,7 @@ jobs:
         propertyPath: 'dependencies.0.version'
         value: 2.0.1
         repository: agill17/s3-operator
-        branch: testbranch
-        targetBranch: master
-        createPR: true
+        branch: master
         message: 'Update chart Version'
         token: ${{ secrets.PAT }}
         workDir: target
