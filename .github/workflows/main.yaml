@@ -24,6 +24,6 @@ jobs:
         value: 2.0.1
         repository: agill17/s3-operator
         branch: master
-        message: 'Update chart Version'
+        message: 'this commit should not be made'
         token: ${{ secrets.PAT }}
         workDir: target
